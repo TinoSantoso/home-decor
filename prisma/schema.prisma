@@ -1,0 +1,225 @@
+// Prisma schema — plan §6
+// Run `npm run prisma:generate` after install and `npm run prisma:migrate` to apply.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  homeowner
+  designer
+  contractor
+  developer
+}
+
+enum BudgetTier {
+  hemat
+  standar
+  premium
+  mewah
+}
+
+enum ZoneType {
+  living_room
+  bedroom
+  kitchen
+  bathroom
+  dining
+  office
+  terrace
+  garden
+  carport
+  facade
+  balcony
+  backyard
+}
+
+enum ItemCategory {
+  furniture
+  lighting
+  paint
+  flooring
+  plant
+  accessory
+  fixture
+  landscaping
+  electrical
+  masonry
+}
+
+enum Priority {
+  esensial
+  direkomendasikan
+  opsional
+}
+
+enum LayoutSource {
+  template
+  upload
+  manual
+}
+
+enum EntitlementType {
+  export_credit
+  unlimited_monthly
+}
+
+enum PaymentProvider {
+  stripe
+  midtrans
+  xendit
+}
+
+enum PaymentStatus {
+  pending
+  succeeded
+  failed
+  refunded
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  name         String?
+  role         UserRole       @default(homeowner)
+  createdAt    DateTime       @default(now())
+  projects     Project[]
+  entitlements Entitlement[]
+  payments     Payment[]
+}
+
+model Project {
+  id              String        @id @default(cuid())
+  user            User?         @relation(fields: [userId], references: [id])
+  userId          String?
+  name            String
+  templateId      String?
+  climateZone     String        @default("tropical_indonesia")
+  budgetTier     BudgetTier    @default(standar)
+  contingencyPct  Float         @default(0.10)
+  taxEnabled      Boolean       @default(false)
+  currency        String        @default("IDR")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  layout          HomeLayout?
+  zones           Zone[]
+}
+
+model HomeLayout {
+  id         String       @id @default(cuid())
+  project    Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId  String       @unique
+  source     LayoutSource @default(template)
+  floorCount Int          @default(1)
+}
+
+model Zone {
+  id              String              @id @default(cuid())
+  project         Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId       String
+  type            ZoneType
+  indoor          Boolean
+  areaM2          Float
+  widthM          Float
+  lengthM         Float
+  heightM         Float               @default(3.0)
+  positionX       Float               @default(0)
+  positionY       Float               @default(0)
+  floor           Int                 @default(1)
+  styleTheme      StyleTheme?         @relation(fields: [styleThemeId], references: [id])
+  styleThemeId    String?
+  customization   ZoneCustomization?
+  placedItems     PlacedItem[]
+}
+
+model StyleTheme {
+  id              String   @id @default(cuid())
+  name            String
+  colorPalette    Json
+  materialPalette Json
+  exampleImage    String?
+  zones           Zone[]
+}
+
+model ZoneCustomization {
+  id                String   @id @default(cuid())
+  zone              Zone     @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  zoneId            String   @unique
+  floorMaterialId   String?
+  wallMaterialId    String?
+  ceilingMaterialId String?
+  lightingSetupId   String?
+  plantSetId        String?
+  colorOverrides    Json?
+}
+
+model Item {
+  id              String       @id @default(cuid())
+  name            String
+  category        ItemCategory
+  subcategory     String?
+  indoorOk        Boolean      @default(true)
+  outdoorOk       Boolean      @default(false)
+  climateTags     String[]
+  styleTags       String[]
+  dimensions      Json?
+  durabilityScore Int          @default(3)
+  maintenanceScore Int         @default(3)
+  priceHemat      Int
+  priceStandar    Int
+  pricePremium    Int
+  priceMewah      Int
+  asset3dUrl      String?
+  thumbnailUrl    String?
+  alternativeIds  String[]
+  placedItems     PlacedItem[]
+}
+
+model PlacedItem {
+  id        String  @id @default(cuid())
+  zone      Zone    @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  zoneId    String
+  item      Item    @relation(fields: [itemId], references: [id])
+  itemId    String
+  transform Json
+  quantity  Int     @default(1)
+  notes     String?
+}
+
+model LaborRate {
+  category        ItemCategory @id
+  pctOfMaterials  Float
+  adjustable      Boolean      @default(true)
+}
+
+model Entitlement {
+  id                String          @id @default(cuid())
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+  type              EntitlementType
+  source            String
+  exportsRemaining  Int?
+  startsAt          DateTime        @default(now())
+  endsAt            DateTime?
+  createdAt         DateTime        @default(now())
+  payments          Payment[]
+}
+
+model Payment {
+  id            String          @id @default(cuid())
+  user          User            @relation(fields: [userId], references: [id])
+  userId        String
+  provider      PaymentProvider
+  providerRef   String
+  amountIdr     Int
+  status        PaymentStatus   @default(pending)
+  entitlement   Entitlement?    @relation(fields: [entitlementId], references: [id])
+  entitlementId String?
+  createdAt     DateTime        @default(now())
+}

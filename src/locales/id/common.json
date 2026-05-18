@@ -1,0 +1,24 @@
+{
+  "landing": {
+    "title": "Rancang rumah impian Anda dalam 3D",
+    "subtitle": "Jelajahi, sesuaikan, dan dapatkan estimasi biaya untuk dekorasi indoor dan outdoor."
+  },
+  "nav": {
+    "dashboard": "Beranda",
+    "newProject": "Buat Proyek Baru",
+    "settings": "Pengaturan"
+  },
+  "budget": {
+    "tier": {
+      "hemat": "Hemat",
+      "standar": "Standar",
+      "premium": "Premium",
+      "mewah": "Mewah"
+    }
+  },
+  "priority": {
+    "essential": "Esensial",
+    "recommended": "Direkomendasikan",
+    "optional": "Opsional"
+  }
+}

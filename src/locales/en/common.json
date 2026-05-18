@@ -1,0 +1,24 @@
+{
+  "landing": {
+    "title": "Design your dream home in 3D",
+    "subtitle": "Explore, customize, and budget your indoor and outdoor decor."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "newProject": "New Project",
+    "settings": "Settings"
+  },
+  "budget": {
+    "tier": {
+      "hemat": "Economy",
+      "standar": "Standard",
+      "premium": "Premium",
+      "mewah": "Luxury"
+    }
+  },
+  "priority": {
+    "essential": "Essential",
+    "recommended": "Recommended",
+    "optional": "Optional"
+  }
+}
