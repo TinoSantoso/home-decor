@@ -1,0 +1,336 @@
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useFloorPlan } from '../stores/floor-plan';
+import { getProject, saveProject } from '../lib/db/projects';
+import { debounce } from '../lib/debounce';
+import { calculateCost, type BudgetTier, type CostCategory } from '../lib/cost-engine';
+import { deriveSurfacesFromZones } from '../lib/surfaces';
+import { formatIDR } from '../lib/currency';
+import { zoneAreaM2 } from '../lib/zones';
+
+export const Route = createFileRoute('/projects/$projectId/estimate')({
+  ssr: false,
+  component: EstimatePage,
+});
+
+const TIERS: readonly BudgetTier[] = ['hemat', 'standar', 'premium', 'mewah'];
+
+type LoadState =
+  | { kind: 'loading' }
+  | { kind: 'ready' }
+  | { kind: 'not_found' };
+
+function EstimatePage() {
+  const { projectId } = Route.useParams();
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const [load, setLoad] = useState<LoadState>({ kind: 'loading' });
+
+  const loadProject = useFloorPlan((s) => s.loadProject);
+  const reset = useFloorPlan((s) => s.reset);
+  const projectName = useFloorPlan((s) => s.projectName);
+  const zones = useFloorPlan((s) => s.zones);
+  const budgetTier = useFloorPlan((s) => s.budgetTier);
+  const contingencyPct = useFloorPlan((s) => s.contingencyPct);
+  const taxEnabled = useFloorPlan((s) => s.taxEnabled);
+  const setBudgetTier = useFloorPlan((s) => s.setBudgetTier);
+  const setContingencyPct = useFloorPlan((s) => s.setContingencyPct);
+  const setTaxEnabled = useFloorPlan((s) => s.setTaxEnabled);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const record = await getProject(projectId);
+      if (cancelled) return;
+      if (!record) {
+        setLoad({ kind: 'not_found' });
+        return;
+      }
+      loadProject(record);
+      setLoad({ kind: 'ready' });
+    })();
+    return () => {
+      cancelled = true;
+      reset();
+    };
+  }, [projectId, loadProject, reset]);
+
+  const persistRef = useRef<ReturnType<typeof debounce<[]>> | null>(null);
+  useEffect(() => {
+    if (load.kind !== 'ready') return;
+    const persist = debounce(() => {
+      const record = useFloorPlan.getState().toProjectRecord();
+      if (!record) return;
+      void saveProject(record);
+    }, 400);
+    persistRef.current = persist;
+
+    const unsubscribe = useFloorPlan.subscribe((state, prev) => {
+      if (
+        state.budgetTier !== prev.budgetTier ||
+        state.contingencyPct !== prev.contingencyPct ||
+        state.taxEnabled !== prev.taxEnabled
+      ) {
+        persist();
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      persist.flush();
+      persistRef.current = null;
+    };
+  }, [load.kind]);
+
+  const localeTag = i18n.language === 'id' ? 'id-ID' : 'en-US';
+
+  const estimate = useMemo(() => {
+    return calculateCost({
+      budgetTier,
+      contingencyPct,
+      taxEnabled,
+      items: [],
+      surfaces: deriveSurfacesFromZones(zones),
+      laborRates: {},
+    });
+  }, [budgetTier, contingencyPct, taxEnabled, zones]);
+
+  if (load.kind === 'loading') {
+    return (
+      <main className="mx-auto max-w-5xl px-6 py-16 text-center text-[color:var(--color-text-muted)]">
+        {t('editor.loading')}
+      </main>
+    );
+  }
+
+  if (load.kind === 'not_found') {
+    return (
+      <main className="mx-auto max-w-3xl px-6 py-16">
+        <h1 className="text-2xl font-semibold">{t('editor.notFound')}</h1>
+        <p className="mt-2 text-[color:var(--color-text-muted)]">
+          {t('editor.notFoundHelp')}
+        </p>
+        <button
+          type="button"
+          onClick={() => void navigate({ to: '/dashboard' })}
+          className="mt-6 rounded-[var(--radius)] bg-[color:var(--color-accent)] px-4 py-2 text-sm text-[color:var(--color-accent-fg)]"
+        >
+          {t('nav.dashboard')}
+        </button>
+      </main>
+    );
+  }
+
+  return (
+    <main className="mx-auto max-w-5xl px-6 py-8">
+      <header className="mb-6 flex items-end justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <Link
+            to="/projects/$projectId/editor"
+            params={{ projectId }}
+            className="text-sm text-[color:var(--color-text-muted)] hover:text-[color:var(--color-text)]"
+          >
+            ← {t('estimate.backToEditor')}
+          </Link>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+            {projectName || t('dashboard.untitled')}
+          </h1>
+          <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">
+            {t('estimate.subtitle')}
+          </p>
+        </div>
+      </header>
+
+      {zones.length === 0 ? (
+        <section className="rounded-[var(--radius-lg)] border border-dashed border-[color:var(--color-border)] p-12 text-center text-sm text-[color:var(--color-text-muted)]">
+          {t('estimate.noZones')}
+        </section>
+      ) : (
+        <>
+          <section
+            aria-labelledby="grand-total"
+            className="rounded-[var(--radius-lg)] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-6"
+          >
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <h2
+                  id="grand-total"
+                  className="text-sm uppercase tracking-wide text-[color:var(--color-text-muted)]"
+                >
+                  {t('estimate.grandTotal')}
+                </h2>
+                <div className="mt-1 text-4xl font-semibold tracking-tight">
+                  {formatIDR(estimate.grandTotal, localeTag)}
+                </div>
+              </div>
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-[color:var(--color-text-muted)]">
+                <dt>{t('estimate.materials')}</dt>
+                <dd className="text-right text-[color:var(--color-text)] tabular-nums">
+                  {formatIDR(estimate.materialsTotal, localeTag)}
+                </dd>
+                <dt>{t('estimate.labor')}</dt>
+                <dd className="text-right text-[color:var(--color-text)] tabular-nums">
+                  {formatIDR(estimate.laborTotal, localeTag)}
+                </dd>
+                <dt>{t('estimate.contingency')}</dt>
+                <dd className="text-right text-[color:var(--color-text)] tabular-nums">
+                  {formatIDR(estimate.contingency, localeTag)}
+                </dd>
+                {taxEnabled && (
+                  <>
+                    <dt>{t('estimate.tax')}</dt>
+                    <dd className="text-right text-[color:var(--color-text)] tabular-nums">
+                      {formatIDR(estimate.tax, localeTag)}
+                    </dd>
+                  </>
+                )}
+              </dl>
+            </div>
+          </section>
+
+          <section
+            aria-labelledby="controls"
+            className="mt-6 rounded-[var(--radius-lg)] border border-[color:var(--color-border)] p-5"
+          >
+            <h2 id="controls" className="sr-only">
+              Controls
+            </h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              <div>
+                <label className="text-xs uppercase tracking-wide text-[color:var(--color-text-muted)]">
+                  {t('estimate.tierLabel')}
+                </label>
+                <div
+                  role="radiogroup"
+                  aria-label={t('estimate.tierLabel')}
+                  className="mt-2 grid grid-cols-2 gap-1.5"
+                >
+                  {TIERS.map((tier) => {
+                    const active = tier === budgetTier;
+                    return (
+                      <button
+                        key={tier}
+                        type="button"
+                        role="radio"
+                        aria-checked={active}
+                        onClick={() => setBudgetTier(tier)}
+                        className={
+                          'rounded-[var(--radius-sm)] border px-3 py-1.5 text-sm transition ' +
+                          (active
+                            ? 'border-[color:var(--color-accent)] bg-[color:var(--color-accent)] text-[color:var(--color-accent-fg)]'
+                            : 'border-[color:var(--color-border)] hover:border-[color:var(--color-accent)]')
+                        }
+                      >
+                        {t(`budget.tier.${tier}`)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="contingency"
+                  className="flex items-baseline justify-between text-xs uppercase tracking-wide text-[color:var(--color-text-muted)]"
+                >
+                  <span>{t('estimate.contingencyLabel')}</span>
+                  <span className="text-[color:var(--color-text)] tabular-nums">
+                    {Math.round(contingencyPct * 100)}%
+                  </span>
+                </label>
+                <input
+                  id="contingency"
+                  type="range"
+                  min={5}
+                  max={15}
+                  step={1}
+                  value={Math.round(contingencyPct * 100)}
+                  onChange={(e) =>
+                    setContingencyPct(Number(e.target.value) / 100)
+                  }
+                  className="mt-3 w-full accent-[color:var(--color-accent)]"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs uppercase tracking-wide text-[color:var(--color-text-muted)]">
+                  {t('estimate.taxLabel')}
+                </label>
+                <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={taxEnabled}
+                    onChange={(e) => setTaxEnabled(e.target.checked)}
+                    className="h-4 w-4 accent-[color:var(--color-accent)]"
+                  />
+                  <span>+ PPN 11%</span>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <section className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="rounded-[var(--radius-lg)] border border-[color:var(--color-border)] p-5">
+              <h3 className="text-sm font-medium">{t('estimate.perZone')}</h3>
+              <ul className="mt-3 divide-y divide-[color:var(--color-border)]">
+                {estimate.perZone.map((row) => {
+                  const zone = zones.find((z) => z.id === row.zoneId);
+                  if (!zone) return null;
+                  const area = zoneAreaM2(zone);
+                  return (
+                    <li
+                      key={row.zoneId}
+                      className="flex items-center justify-between py-2 text-sm"
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate">{zone.name}</div>
+                        <div className="text-xs text-[color:var(--color-text-muted)]">
+                          {t(`zoneType.${zone.type}`)} · {area.toFixed(1)} m²
+                        </div>
+                      </div>
+                      <div className="tabular-nums">
+                        {formatIDR(row.total, localeTag)}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+
+            <div className="rounded-[var(--radius-lg)] border border-[color:var(--color-border)] p-5">
+              <h3 className="text-sm font-medium">{t('estimate.perCategory')}</h3>
+              <ul className="mt-3 divide-y divide-[color:var(--color-border)]">
+                {estimate.perCategory.map((row) => (
+                  <li
+                    key={row.category}
+                    className="flex items-center justify-between py-2 text-sm"
+                  >
+                    <div className="min-w-0">
+                      <div>{t(`costCategory.${row.category as CostCategory}`)}</div>
+                      <div className="text-xs text-[color:var(--color-text-muted)]">
+                        {t('estimate.materials')}{' '}
+                        {formatIDR(row.materials, localeTag)} ·{' '}
+                        {t('estimate.labor')} {formatIDR(row.labor, localeTag)}
+                      </div>
+                    </div>
+                    <div className="tabular-nums">
+                      {formatIDR(row.total, localeTag)}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+
+          <section className="mt-6 rounded-[var(--radius-lg)] border border-dashed border-[color:var(--color-border)] p-5 text-xs text-[color:var(--color-text-muted)]">
+            <h3 className="text-[color:var(--color-text)] text-sm font-medium">
+              {t('estimate.assumptions')}
+            </h3>
+            <p className="mt-2">{t('estimate.assumptionsBody')}</p>
+          </section>
+        </>
+      )}
+    </main>
+  );
+}

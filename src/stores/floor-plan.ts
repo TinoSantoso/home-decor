@@ -26,6 +26,9 @@ interface FloorPlanState {
   deleteZone: (id: string) => void;
   selectZone: (id: string | null) => void;
   setProjectName: (name: string) => void;
+  setBudgetTier: (tier: BudgetTier) => void;
+  setContingencyPct: (pct: number) => void;
+  setTaxEnabled: (enabled: boolean) => void;
   reset: () => void;
   toProjectRecord: () => ProjectRecord | null;
 }
@@ -40,6 +43,9 @@ const INITIAL: Omit<
   | 'deleteZone'
   | 'selectZone'
   | 'setProjectName'
+  | 'setBudgetTier'
+  | 'setContingencyPct'
+  | 'setTaxEnabled'
   | 'reset'
   | 'toProjectRecord'
 > = {
@@ -99,6 +105,13 @@ export const useFloorPlan = create<FloorPlanState>((set, get) => ({
   selectZone: (id) => set({ selectedZoneId: id }),
 
   setProjectName: (name) => set({ projectName: name }),
+
+  setBudgetTier: (budgetTier) => set({ budgetTier }),
+
+  setContingencyPct: (contingencyPct) =>
+    set({ contingencyPct: Math.min(0.15, Math.max(0.05, contingencyPct)) }),
+
+  setTaxEnabled: (taxEnabled) => set({ taxEnabled }),
 
   reset: () => set(INITIAL),
 

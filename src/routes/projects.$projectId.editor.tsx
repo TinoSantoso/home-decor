@@ -123,9 +123,18 @@ function EditorPage() {
             className="mt-1 w-full bg-transparent text-2xl font-semibold tracking-tight outline-none focus:ring-2 focus:ring-[color:var(--color-accent)]"
           />
         </div>
-        <div className="text-xs text-[color:var(--color-text-muted)]">
-          {saveStatus === 'saving' && t('editor.saving')}
-          {saveStatus === 'saved' && t('editor.saved')}
+        <div className="flex items-center gap-4">
+          <span className="text-xs text-[color:var(--color-text-muted)]">
+            {saveStatus === 'saving' && t('editor.saving')}
+            {saveStatus === 'saved' && t('editor.saved')}
+          </span>
+          <Link
+            to="/projects/$projectId/estimate"
+            params={{ projectId }}
+            className="rounded-[var(--radius)] border border-[color:var(--color-border)] px-3 py-1.5 text-sm hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
+          >
+            {t('estimate.viewEstimate')}
+          </Link>
         </div>
       </header>
 

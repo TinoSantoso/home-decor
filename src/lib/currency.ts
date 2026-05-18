@@ -1,9 +1,17 @@
-const idrFormatter = new Intl.NumberFormat('id-ID', {
-  style: 'currency',
-  currency: 'IDR',
-  maximumFractionDigits: 0,
-});
+const cache = new Map<string, Intl.NumberFormat>();
 
-export function formatIDR(amount: number): string {
-  return idrFormatter.format(Math.round(amount));
+function getFormatter(locale: string): Intl.NumberFormat {
+  const cached = cache.get(locale);
+  if (cached) return cached;
+  const fmt = new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0,
+  });
+  cache.set(locale, fmt);
+  return fmt;
+}
+
+export function formatIDR(amount: number, locale = 'id-ID'): string {
+  return getFormatter(locale).format(Math.round(amount));
 }
