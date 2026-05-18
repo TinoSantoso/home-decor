@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 
 export const Route = createFileRoute('/')({
@@ -17,10 +17,18 @@ function LandingPage() {
         {t('landing.subtitle')}
       </p>
 
-      <div className="mt-8 flex gap-3">
+      <div className="mt-8 flex flex-wrap gap-3">
+        <Link
+          to="/dashboard"
+          className="rounded-[var(--radius)] bg-[color:var(--color-accent)] px-4 py-2 text-sm font-medium text-[color:var(--color-accent-fg)]"
+        >
+          {t('landing.cta')}
+        </Link>
         <button
           type="button"
-          onClick={() => i18n.changeLanguage(i18n.language === 'id' ? 'en' : 'id')}
+          onClick={() =>
+            void i18n.changeLanguage(i18n.language === 'id' ? 'en' : 'id')
+          }
           className="rounded-[var(--radius)] border border-[color:var(--color-border)] px-4 py-2 text-sm"
         >
           {i18n.language === 'id' ? 'English' : 'Bahasa Indonesia'}

@@ -1,12 +1,55 @@
 {
   "landing": {
     "title": "Design your dream home in 3D",
-    "subtitle": "Explore, customize, and budget your indoor and outdoor decor."
+    "subtitle": "Explore, customize, and budget your indoor and outdoor decor.",
+    "cta": "Get started"
   },
   "nav": {
     "dashboard": "Dashboard",
     "newProject": "New Project",
     "settings": "Settings"
+  },
+  "dashboard": {
+    "title": "My Projects",
+    "subtitle": "Continue a saved project or start a new one.",
+    "empty": "No saved projects yet. Click \"New Project\" to begin."
+  },
+  "newProject": {
+    "title": "Choose a Home Template",
+    "subtitle": "Start from a template, then customize zones in the editor.",
+    "template": "Template",
+    "areaLabel": "± {{area}} m²"
+  },
+  "templates": {
+    "rumah-tapak-t36": "Landed House T36",
+    "rumah-tapak-t45": "Landed House T45",
+    "rumah-tapak-t70": "Landed House T70",
+    "apartemen-studio": "Studio Apartment",
+    "apartemen-2br": "2BR Apartment",
+    "villa-kecil": "Small Villa"
+  },
+  "editor": {
+    "title": "Floor Plan Editor",
+    "projectId": "Project {{id}}",
+    "addZone": "Add Zone",
+    "deleteSelected": "Delete Selected",
+    "loadingCanvas": "Loading canvas…",
+    "zoneCount_one": "{{count}} zone",
+    "zoneCount_other": "{{count}} zones"
+  },
+  "zoneType": {
+    "living_room": "Living Room",
+    "bedroom": "Bedroom",
+    "kitchen": "Kitchen",
+    "bathroom": "Bathroom",
+    "dining": "Dining",
+    "office": "Office",
+    "terrace": "Terrace",
+    "garden": "Garden",
+    "carport": "Carport",
+    "facade": "Facade",
+    "balcony": "Balcony",
+    "backyard": "Backyard"
   },
   "budget": {
     "tier": {

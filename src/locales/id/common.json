@@ -1,12 +1,55 @@
 {
   "landing": {
     "title": "Rancang rumah impian Anda dalam 3D",
-    "subtitle": "Jelajahi, sesuaikan, dan dapatkan estimasi biaya untuk dekorasi indoor dan outdoor."
+    "subtitle": "Jelajahi, sesuaikan, dan dapatkan estimasi biaya untuk dekorasi indoor dan outdoor.",
+    "cta": "Mulai sekarang"
   },
   "nav": {
     "dashboard": "Beranda",
     "newProject": "Buat Proyek Baru",
     "settings": "Pengaturan"
+  },
+  "dashboard": {
+    "title": "Proyek Saya",
+    "subtitle": "Lanjutkan proyek yang tersimpan atau mulai yang baru.",
+    "empty": "Belum ada proyek tersimpan. Klik \"Buat Proyek Baru\" untuk memulai."
+  },
+  "newProject": {
+    "title": "Pilih Template Rumah",
+    "subtitle": "Mulai dari template, lalu sesuaikan zona-zona di editor.",
+    "template": "Template",
+    "areaLabel": "± {{area}} m²"
+  },
+  "templates": {
+    "rumah-tapak-t36": "Rumah Tapak T36",
+    "rumah-tapak-t45": "Rumah Tapak T45",
+    "rumah-tapak-t70": "Rumah Tapak T70",
+    "apartemen-studio": "Apartemen Studio",
+    "apartemen-2br": "Apartemen 2BR",
+    "villa-kecil": "Villa Kecil"
+  },
+  "editor": {
+    "title": "Editor Denah",
+    "projectId": "Proyek {{id}}",
+    "addZone": "Tambah Zona",
+    "deleteSelected": "Hapus Terpilih",
+    "loadingCanvas": "Memuat kanvas…",
+    "zoneCount_one": "{{count}} zona",
+    "zoneCount_other": "{{count}} zona"
+  },
+  "zoneType": {
+    "living_room": "Ruang Tamu",
+    "bedroom": "Kamar Tidur",
+    "kitchen": "Dapur",
+    "bathroom": "Kamar Mandi",
+    "dining": "Ruang Makan",
+    "office": "Ruang Kerja",
+    "terrace": "Teras",
+    "garden": "Taman",
+    "carport": "Carport",
+    "facade": "Fasad",
+    "balcony": "Balkon",
+    "backyard": "Halaman Belakang"
   },
   "budget": {
     "tier": {
