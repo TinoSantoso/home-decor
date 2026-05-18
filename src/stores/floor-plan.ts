@@ -5,22 +5,70 @@ import {
   type ZoneType,
   metersToPx,
 } from '../lib/zones';
+import type { BudgetTier } from '../lib/cost-engine';
+import type { ProjectRecord } from '../lib/db/types';
 
 interface FloorPlanState {
+  /** The id of the currently-open project, or null when no project is loaded. */
+  projectId: string | null;
+  projectName: string;
+  templateId: string | null;
+  budgetTier: BudgetTier;
+  contingencyPct: number;
+  taxEnabled: boolean;
+  climateZone: string;
   zones: Zone[];
   selectedZoneId: string | null;
+
+  loadProject: (record: ProjectRecord) => void;
   addZone: (type: ZoneType, name: string) => string;
   updateZone: (id: string, patch: Partial<Omit<Zone, 'id'>>) => void;
   deleteZone: (id: string) => void;
   selectZone: (id: string | null) => void;
+  setProjectName: (name: string) => void;
   reset: () => void;
+  toProjectRecord: () => ProjectRecord | null;
 }
 
 const DEFAULT_ZONE_SIZE = metersToPx(4);
 
-export const useFloorPlan = create<FloorPlanState>((set) => ({
+const INITIAL: Omit<
+  FloorPlanState,
+  | 'loadProject'
+  | 'addZone'
+  | 'updateZone'
+  | 'deleteZone'
+  | 'selectZone'
+  | 'setProjectName'
+  | 'reset'
+  | 'toProjectRecord'
+> = {
+  projectId: null,
+  projectName: '',
+  templateId: null,
+  budgetTier: 'standar',
+  contingencyPct: 0.1,
+  taxEnabled: false,
+  climateZone: 'tropical_indonesia',
   zones: [],
   selectedZoneId: null,
+};
+
+export const useFloorPlan = create<FloorPlanState>((set, get) => ({
+  ...INITIAL,
+
+  loadProject: (record) =>
+    set({
+      projectId: record.id,
+      projectName: record.name,
+      templateId: record.templateId,
+      budgetTier: record.budgetTier,
+      contingencyPct: record.contingencyPct,
+      taxEnabled: record.taxEnabled,
+      climateZone: record.climateZone,
+      zones: record.zones,
+      selectedZoneId: null,
+    }),
 
   addZone: (type, name) => {
     const id = nanoid(8);
@@ -50,5 +98,24 @@ export const useFloorPlan = create<FloorPlanState>((set) => ({
 
   selectZone: (id) => set({ selectedZoneId: id }),
 
-  reset: () => set({ zones: [], selectedZoneId: null }),
+  setProjectName: (name) => set({ projectName: name }),
+
+  reset: () => set(INITIAL),
+
+  toProjectRecord: () => {
+    const s = get();
+    if (!s.projectId) return null;
+    return {
+      id: s.projectId,
+      name: s.projectName,
+      templateId: s.templateId,
+      budgetTier: s.budgetTier,
+      contingencyPct: s.contingencyPct,
+      taxEnabled: s.taxEnabled,
+      climateZone: s.climateZone,
+      zones: s.zones,
+      createdAt: 0,
+      updatedAt: Date.now(),
+    };
+  },
 }));

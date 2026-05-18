@@ -1,12 +1,32 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { listProjects, deleteProject } from '../lib/db/projects';
+import type { ProjectRecord } from '../lib/db/types';
+import { formatRelativeFromNow } from '../lib/relative-time';
 
 export const Route = createFileRoute('/dashboard')({
+  ssr: false,
   component: DashboardPage,
 });
 
 function DashboardPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const [projects, setProjects] = useState<ProjectRecord[] | null>(null);
+
+  useEffect(() => {
+    void listProjects().then(setProjects);
+  }, []);
+
+  async function onDelete(id: string) {
+    await deleteProject(id);
+    const next = await listProjects();
+    setProjects(next);
+  }
+
+  const localeTag = i18n.language === 'id' ? 'id' : 'en';
+
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
       <header className="flex items-end justify-between">
@@ -26,11 +46,57 @@ function DashboardPage() {
         </Link>
       </header>
 
-      <section className="mt-10 rounded-[var(--radius-lg)] border border-dashed border-[color:var(--color-border)] p-12 text-center">
-        <p className="text-[color:var(--color-text-muted)]">
-          {t('dashboard.empty')}
-        </p>
-      </section>
+      {projects === null && (
+        <section className="mt-10 text-center text-sm text-[color:var(--color-text-muted)]">
+          {t('dashboard.loading')}
+        </section>
+      )}
+
+      {projects !== null && projects.length === 0 && (
+        <section className="mt-10 rounded-[var(--radius-lg)] border border-dashed border-[color:var(--color-border)] p-12 text-center">
+          <p className="text-[color:var(--color-text-muted)]">
+            {t('dashboard.empty')}
+          </p>
+        </section>
+      )}
+
+      {projects !== null && projects.length > 0 && (
+        <ul className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {projects.map((p) => (
+            <li
+              key={p.id}
+              className="group flex items-start justify-between rounded-[var(--radius-lg)] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4"
+            >
+              <button
+                type="button"
+                onClick={() =>
+                  void navigate({
+                    to: '/projects/$projectId/editor',
+                    params: { projectId: p.id },
+                  })
+                }
+                className="flex-1 text-left"
+              >
+                <div className="font-medium">
+                  {p.name || t('dashboard.untitled')}
+                </div>
+                <div className="mt-1 text-xs text-[color:var(--color-text-muted)]">
+                  {t('dashboard.zoneSummary', { count: p.zones.length })} ·{' '}
+                  {formatRelativeFromNow(p.updatedAt, localeTag)}
+                </div>
+              </button>
+              <button
+                type="button"
+                aria-label={t('dashboard.delete')}
+                onClick={() => void onDelete(p.id)}
+                className="ml-2 rounded-[var(--radius-sm)] border border-transparent px-2 py-1 text-xs text-[color:var(--color-text-muted)] opacity-0 transition group-hover:opacity-100 hover:border-[color:var(--color-danger)] hover:text-[color:var(--color-danger)]"
+              >
+                {t('dashboard.delete')}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   );
 }

@@ -12,7 +12,12 @@
   "dashboard": {
     "title": "Proyek Saya",
     "subtitle": "Lanjutkan proyek yang tersimpan atau mulai yang baru.",
-    "empty": "Belum ada proyek tersimpan. Klik \"Buat Proyek Baru\" untuk memulai."
+    "empty": "Belum ada proyek tersimpan. Klik \"Buat Proyek Baru\" untuk memulai.",
+    "loading": "Memuat proyek…",
+    "untitled": "Tanpa Judul",
+    "delete": "Hapus",
+    "zoneSummary_one": "{{count}} zona",
+    "zoneSummary_other": "{{count}} zona"
   },
   "newProject": {
     "title": "Pilih Template Rumah",
@@ -31,9 +36,15 @@
   "editor": {
     "title": "Editor Denah",
     "projectId": "Proyek {{id}}",
+    "projectNameLabel": "Nama proyek",
     "addZone": "Tambah Zona",
     "deleteSelected": "Hapus Terpilih",
     "loadingCanvas": "Memuat kanvas…",
+    "loading": "Memuat proyek…",
+    "notFound": "Proyek tidak ditemukan",
+    "notFoundHelp": "Proyek mungkin telah dihapus atau dibuat di perangkat lain.",
+    "saving": "Menyimpan…",
+    "saved": "Tersimpan",
     "zoneCount_one": "{{count}} zona",
     "zoneCount_other": "{{count}} zona"
   },

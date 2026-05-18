@@ -12,7 +12,12 @@
   "dashboard": {
     "title": "My Projects",
     "subtitle": "Continue a saved project or start a new one.",
-    "empty": "No saved projects yet. Click \"New Project\" to begin."
+    "empty": "No saved projects yet. Click \"New Project\" to begin.",
+    "loading": "Loading projects…",
+    "untitled": "Untitled",
+    "delete": "Delete",
+    "zoneSummary_one": "{{count}} zone",
+    "zoneSummary_other": "{{count}} zones"
   },
   "newProject": {
     "title": "Choose a Home Template",
@@ -31,9 +36,15 @@
   "editor": {
     "title": "Floor Plan Editor",
     "projectId": "Project {{id}}",
+    "projectNameLabel": "Project name",
     "addZone": "Add Zone",
     "deleteSelected": "Delete Selected",
     "loadingCanvas": "Loading canvas…",
+    "loading": "Loading project…",
+    "notFound": "Project not found",
+    "notFoundHelp": "It may have been deleted or created on another device.",
+    "saving": "Saving…",
+    "saved": "Saved",
     "zoneCount_one": "{{count}} zone",
     "zoneCount_other": "{{count}} zones"
   },

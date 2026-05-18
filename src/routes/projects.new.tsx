@@ -1,8 +1,10 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { nanoid } from 'nanoid';
+import { createProject } from '../lib/db/projects';
 
 export const Route = createFileRoute('/projects/new')({
+  ssr: false,
   component: NewProjectPage,
 });
 
@@ -18,6 +20,29 @@ const TEMPLATES = [
 function NewProjectPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+
+  async function pickTemplate(templateId: string) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const project = await createProject({
+        name: t(`templates.${templateId}`),
+        templateId,
+        budgetTier: 'standar',
+        contingencyPct: 0.1,
+        taxEnabled: false,
+        climateZone: 'tropical_indonesia',
+      });
+      await navigate({
+        to: '/projects/$projectId/editor',
+        params: { projectId: project.id },
+      });
+    } catch (err) {
+      console.error(err);
+      setBusy(false);
+    }
+  }
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
@@ -33,14 +58,9 @@ function NewProjectPage() {
           <li key={tpl.id}>
             <button
               type="button"
-              onClick={() => {
-                const projectId = nanoid(8);
-                void navigate({
-                  to: '/projects/$projectId/editor',
-                  params: { projectId },
-                });
-              }}
-              className="block w-full rounded-[var(--radius-lg)] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-6 text-left transition hover:border-[color:var(--color-accent)]"
+              disabled={busy}
+              onClick={() => void pickTemplate(tpl.id)}
+              className="block w-full rounded-[var(--radius-lg)] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-6 text-left transition hover:border-[color:var(--color-accent)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <div className="text-sm uppercase tracking-wide text-[color:var(--color-text-muted)]">
                 {t('newProject.template')}
