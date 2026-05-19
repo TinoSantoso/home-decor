@@ -59,6 +59,8 @@ export interface Item {
   dimensions: ItemDimensions;
   durabilityScore: number;
   maintenanceScore: number;
+  /** Optional curated-popularity weight 0–100. Defaults to 50 in the recommendation engine. */
+  popularityScore?: number;
   priceIdr: Record<BudgetTier, number>;
   thumbnailHint: string;
   alternatives: string[];
