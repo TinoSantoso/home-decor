@@ -6,6 +6,7 @@ import {
   metersToPx,
 } from '../lib/zones';
 import type { BudgetTier } from '../lib/cost-engine';
+import type { StyleTag } from '../lib/catalog';
 import type { PlacedItemRecord, ProjectRecord } from '../lib/db/types';
 
 interface FloorPlanState {
@@ -17,6 +18,7 @@ interface FloorPlanState {
   contingencyPct: number;
   taxEnabled: boolean;
   climateZone: string;
+  styleTag: StyleTag | null;
   zones: Zone[];
   selectedZoneId: string | null;
   placedItems: PlacedItemRecord[];
@@ -33,6 +35,7 @@ interface FloorPlanState {
   setContingencyPct: (pct: number) => void;
   setTaxEnabled: (enabled: boolean) => void;
   setSnapEnabled: (enabled: boolean) => void;
+  setStyleTag: (tag: StyleTag | null) => void;
   addPlacedItem: (zoneId: string, itemId: string, quantity?: number) => string;
   updatePlacedItem: (id: string, patch: Partial<Omit<PlacedItemRecord, 'id'>>) => void;
   removePlacedItem: (id: string) => void;
@@ -51,6 +54,7 @@ const INITIAL: Pick<
   | 'contingencyPct'
   | 'taxEnabled'
   | 'climateZone'
+  | 'styleTag'
   | 'zones'
   | 'selectedZoneId'
   | 'placedItems'
@@ -63,6 +67,7 @@ const INITIAL: Pick<
   contingencyPct: 0.1,
   taxEnabled: false,
   climateZone: 'tropical_indonesia',
+  styleTag: null,
   zones: [],
   selectedZoneId: null,
   placedItems: [],
@@ -81,6 +86,7 @@ export const useFloorPlan = create<FloorPlanState>((set, get) => ({
       contingencyPct: record.contingencyPct,
       taxEnabled: record.taxEnabled,
       climateZone: record.climateZone,
+      styleTag: record.styleTag ?? null,
       zones: record.zones,
       placedItems: record.placedItems ?? [],
       selectedZoneId: null,
@@ -127,6 +133,8 @@ export const useFloorPlan = create<FloorPlanState>((set, get) => ({
 
   setSnapEnabled: (snapEnabled) => set({ snapEnabled }),
 
+  setStyleTag: (styleTag) => set({ styleTag }),
+
   addPlacedItem: (zoneId, itemId, quantity = 1) => {
     const id = nanoid(10);
     const record: PlacedItemRecord = { id, zoneId, itemId, quantity, notes: '' };
@@ -155,6 +163,7 @@ export const useFloorPlan = create<FloorPlanState>((set, get) => ({
       contingencyPct: s.contingencyPct,
       taxEnabled: s.taxEnabled,
       climateZone: s.climateZone,
+      styleTag: s.styleTag,
       zones: s.zones,
       placedItems: s.placedItems,
       createdAt: 0,

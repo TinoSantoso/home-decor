@@ -47,7 +47,33 @@
     "saving": "Menyimpan…",
     "saved": "Tersimpan",
     "zoneCount_one": "{{count}} zona",
-    "zoneCount_other": "{{count}} zona"
+    "zoneCount_other": "{{count}} zona",
+    "snapToGrid": "Snap ke grid 0,25 m",
+    "style": "Gaya",
+    "selectZoneHint": "Pilih zona di kanvas untuk melihat properti, rekomendasi, dan item terpasang.",
+    "zoneNameLabel": "Nama zona",
+    "zoneType": "Tipe Zona",
+    "zoneTypeHintIndoor": "Zona indoor — hanya item indoor yang direkomendasikan.",
+    "zoneTypeHintOutdoor": "Zona outdoor — rekomendasi disaring untuk tahan iklim tropis.",
+    "tab": {
+      "properties": "Properti",
+      "recommendations": "Rekomendasi",
+      "placed_one": "Terpasang ({{count}})",
+      "placed_other": "Terpasang ({{count}})"
+    },
+    "addToZone": "Tambahkan ke Zona",
+    "noRecommendations": "Belum ada rekomendasi untuk konfigurasi ini. Coba ubah gaya atau tipe zona.",
+    "noPlacedItems": "Belum ada item terpasang di zona ini. Lihat tab Rekomendasi untuk menambahkan.",
+    "removeItem": "Hapus item",
+    "itemMissing": "Item tidak ditemukan di katalog"
+  },
+  "reason": {
+    "style_match": "Gaya cocok",
+    "climate_fit": "Tahan iklim",
+    "durable": "Awet",
+    "low_maintenance": "Perawatan mudah",
+    "tier_fit": "Sesuai anggaran",
+    "essential_for_zone": "Esensial"
   },
   "estimate": {
     "title": "Estimasi Biaya",

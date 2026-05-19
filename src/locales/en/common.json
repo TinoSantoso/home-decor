@@ -47,7 +47,33 @@
     "saving": "Saving…",
     "saved": "Saved",
     "zoneCount_one": "{{count}} zone",
-    "zoneCount_other": "{{count}} zones"
+    "zoneCount_other": "{{count}} zones",
+    "snapToGrid": "Snap to 0.25 m grid",
+    "style": "Style",
+    "selectZoneHint": "Select a zone on the canvas to see properties, recommendations, and placed items.",
+    "zoneNameLabel": "Zone name",
+    "zoneType": "Zone Type",
+    "zoneTypeHintIndoor": "Indoor zone — only indoor items are recommended.",
+    "zoneTypeHintOutdoor": "Outdoor zone — recommendations are filtered for tropical-climate suitability.",
+    "tab": {
+      "properties": "Properties",
+      "recommendations": "Recommendations",
+      "placed_one": "Placed ({{count}})",
+      "placed_other": "Placed ({{count}})"
+    },
+    "addToZone": "Add to Zone",
+    "noRecommendations": "No recommendations match. Try changing the style or zone type.",
+    "noPlacedItems": "No items placed in this zone yet. See the Recommendations tab to add some.",
+    "removeItem": "Remove item",
+    "itemMissing": "Item not in catalog"
+  },
+  "reason": {
+    "style_match": "Style match",
+    "climate_fit": "Climate-suited",
+    "durable": "Durable",
+    "low_maintenance": "Low maintenance",
+    "tier_fit": "In tier",
+    "essential_for_zone": "Essential"
   },
   "estimate": {
     "title": "Cost Estimate",

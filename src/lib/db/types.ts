@@ -1,5 +1,6 @@
 import type { Zone } from '../zones';
 import type { BudgetTier } from '../cost-engine';
+import type { StyleTag } from '../catalog';
 
 export interface PlacedItemRecord {
   id: string;
@@ -17,6 +18,7 @@ export interface ProjectRecord {
   contingencyPct: number;
   taxEnabled: boolean;
   climateZone: string;
+  styleTag: StyleTag | null;
   zones: Zone[];
   placedItems: PlacedItemRecord[];
   createdAt: number;

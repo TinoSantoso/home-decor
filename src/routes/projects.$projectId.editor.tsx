@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EditorToolbar } from '../components/editor/EditorToolbar';
+import { ZoneDetailPanel } from '../components/editor/ZoneDetailPanel';
 import { useFloorPlan } from '../stores/floor-plan';
 import { getProject, saveProject } from '../lib/db/projects';
 import { debounce } from '../lib/debounce';
@@ -107,7 +108,7 @@ function EditorPage() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-6 py-8">
+    <main className="mx-auto max-w-[1440px] px-6 py-8">
       <header className="mb-6 flex items-end justify-between gap-4">
         <div className="min-w-0 flex-1">
           <Link
@@ -141,7 +142,7 @@ function EditorPage() {
 
       <EditorToolbar />
 
-      <div className="mt-4">
+      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[1fr_360px]">
         <Suspense
           fallback={
             <div className="grid h-[700px] place-items-center rounded-[var(--radius)] border border-[color:var(--color-border)]">
@@ -153,6 +154,7 @@ function EditorPage() {
         >
           <FloorPlanCanvas />
         </Suspense>
+        <ZoneDetailPanel />
       </div>
     </main>
   );

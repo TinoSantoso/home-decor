@@ -45,6 +45,8 @@ export default function FloorPlanCanvas() {
   const selectZone = useFloorPlan((s) => s.selectZone);
   const updateZone = useFloorPlan((s) => s.updateZone);
   const deleteZone = useFloorPlan((s) => s.deleteZone);
+  const snapEnabled = useFloorPlan((s) => s.snapEnabled);
+  const maybeSnap = (v: number) => (snapEnabled ? snapPx(v) : Math.round(v));
 
   const transformerRef = useRef<Konva.Transformer | null>(null);
   const rectRefs = useRef<Map<string, Konva.Rect>>(new Map());
@@ -113,8 +115,8 @@ export default function FloorPlanCanvas() {
                   onMouseDown={() => selectZone(zone.id)}
                   onDragEnd={(e) => {
                     updateZone(zone.id, {
-                      x: snapPx(e.target.x()),
-                      y: snapPx(e.target.y()),
+                      x: maybeSnap(e.target.x()),
+                      y: maybeSnap(e.target.y()),
                     });
                   }}
                   onTransformEnd={(e) => {
@@ -123,17 +125,17 @@ export default function FloorPlanCanvas() {
                     const scaleY = node.scaleY();
                     const newWidth = Math.max(
                       PIXELS_PER_METER,
-                      snapPx(node.width() * scaleX),
+                      maybeSnap(node.width() * scaleX),
                     );
                     const newHeight = Math.max(
                       PIXELS_PER_METER,
-                      snapPx(node.height() * scaleY),
+                      maybeSnap(node.height() * scaleY),
                     );
                     node.scaleX(1);
                     node.scaleY(1);
                     updateZone(zone.id, {
-                      x: snapPx(node.x()),
-                      y: snapPx(node.y()),
+                      x: maybeSnap(node.x()),
+                      y: maybeSnap(node.y()),
                       width: newWidth,
                       height: newHeight,
                     });

@@ -9,6 +9,7 @@ export async function createProject(
   const record: ProjectRecord = {
     id: nanoid(8),
     ...input,
+    styleTag: null,
     zones: [],
     placedItems: [],
     createdAt: now,
@@ -28,6 +29,7 @@ function hydrate(record: ProjectRecord | undefined): ProjectRecord | null {
   return {
     ...record,
     placedItems: record.placedItems ?? [],
+    styleTag: record.styleTag ?? null,
   };
 }
 
