@@ -75,6 +75,15 @@
     "tier_fit": "Sesuai anggaran",
     "essential_for_zone": "Esensial"
   },
+  "tour": {
+    "title": "Tur 3D",
+    "open": "Tur 3D",
+    "subtitle": "Tampilan 3D zona-zona Anda. Klik dan tarik untuk memutar; gulir untuk zoom.",
+    "backToEditor": "Kembali ke Editor",
+    "loadingScene": "Memuat pemandangan 3D…",
+    "noZones": "Belum ada zona. Tambahkan zona di editor untuk melihat tur 3D.",
+    "controlsHint": "Tarik kiri untuk memutar · tarik kanan untuk geser · gulir untuk zoom · klik zona untuk memilih"
+  },
   "estimate": {
     "title": "Estimasi Biaya",
     "subtitle": "Perkiraan menyeluruh berdasarkan zona, finishing, dan tingkat anggaran.",

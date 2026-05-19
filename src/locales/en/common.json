@@ -75,6 +75,15 @@
     "tier_fit": "In tier",
     "essential_for_zone": "Essential"
   },
+  "tour": {
+    "title": "3D Tour",
+    "open": "3D Tour",
+    "subtitle": "3D view of your zones. Click and drag to orbit; scroll to zoom.",
+    "backToEditor": "Back to Editor",
+    "loadingScene": "Loading 3D scene…",
+    "noZones": "No zones yet. Add zones in the editor to see the 3D tour.",
+    "controlsHint": "Left-drag to orbit · right-drag to pan · scroll to zoom · click a zone to select"
+  },
   "estimate": {
     "title": "Cost Estimate",
     "subtitle": "End-to-end estimate based on zones, finishes, and budget tier.",

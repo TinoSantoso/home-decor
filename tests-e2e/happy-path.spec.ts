@@ -12,6 +12,62 @@ import { expect, test } from '@playwright/test';
  * means a fresh IndexedDB. No cleanup needed between cases.
  */
 
+test.describe('Phase 2 slice 1: 3D tour route mounts', () => {
+  test('navigates from editor to 3D tour and renders a canvas', async ({ page }) => {
+    // Catch errors throughout, not just at the end.
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+
+    // Bootstrap a project with a zone — wait for the debounced auto-save
+    // to hit IDB before navigating away, otherwise /tour loads a project
+    // with no zones.
+    await page.goto('/projects/new');
+    await page.getByRole('button', { name: /Rumah Tapak T45/ }).click();
+    await expect(page).toHaveURL(/\/projects\/[A-Za-z0-9_-]+\/editor$/);
+    await page.getByRole('button', { name: 'Ruang Tamu' }).first().click();
+    await expect(page.getByText('Tersimpan')).toBeVisible();
+
+    // Navigate to the 3D tour via the editor nav link.
+    await page.getByRole('link', { name: 'Tur 3D' }).click();
+    await expect(page).toHaveURL(/\/projects\/[A-Za-z0-9_-]+\/tour$/);
+    await expect(
+      page.getByRole('heading', { name: 'Rumah Tapak T45' }),
+    ).toBeVisible();
+
+    // Suspense fallback "Memuat pemandangan 3D…" disappears once the
+    // heavy R3F chunk loads and the canvas mounts.
+    await expect(page.getByText('Memuat pemandangan 3D…')).toBeHidden({
+      timeout: 15_000,
+    });
+
+    // Canvas element confirms WebGL surface is present.
+    await expect(page.locator('canvas')).toBeVisible({ timeout: 15_000 });
+
+    // No JavaScript runtime errors during scene boot.
+    expect(errors).toEqual([]);
+  });
+
+  test('shows an empty-state hint when the project has no zones', async ({
+    page,
+  }) => {
+    await page.goto('/projects/new');
+    await page.getByRole('button', { name: /Apartemen Studio/ }).click();
+    // Wait until the editor has fully loaded the new project from IDB
+    // before navigating away — guarantees the IDB write completed.
+    await expect(
+      page.getByRole('textbox', { name: 'Nama proyek' }),
+    ).toHaveValue('Apartemen Studio');
+
+    // Don't add any zones — navigate straight to /tour.
+    const tourUrl = page.url().replace('/editor', '/tour');
+    await page.goto(tourUrl);
+    await expect(
+      page.getByText(/Belum ada zona\. Tambahkan zona di editor/),
+    ).toBeVisible();
+    await expect(page.locator('canvas')).toHaveCount(0);
+  });
+});
+
 test.describe('Phase 1 happy path (Bahasa Indonesia locale)', () => {
   test('user creates a project, adds a zone, places a recommendation, and sees the cost estimate', async ({
     page,

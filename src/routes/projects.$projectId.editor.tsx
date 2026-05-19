@@ -131,6 +131,13 @@ function EditorPage() {
             {saveStatus === 'saved' && t('editor.saved')}
           </span>
           <Link
+            to="/projects/$projectId/tour"
+            params={{ projectId }}
+            className="rounded-[var(--radius)] border border-[color:var(--color-border)] px-3 py-1.5 text-sm hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
+          >
+            {t('tour.open')}
+          </Link>
+          <Link
             to="/projects/$projectId/estimate"
             params={{ projectId }}
             className="rounded-[var(--radius)] border border-[color:var(--color-border)] px-3 py-1.5 text-sm hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
