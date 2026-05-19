@@ -25,11 +25,18 @@ type Tab = 'properties' | 'recommendations' | 'placed';
 export function ZoneDetailPanel() {
   const { t, i18n } = useTranslation();
   const selectedZoneId = useFloorPlan((s) => s.selectedZoneId);
-  const zone = useFloorPlan((s) =>
-    s.zones.find((z) => z.id === s.selectedZoneId) ?? null,
+  // Select raw slices; derive filtered views via useMemo so we never return
+  // a fresh array from a Zustand selector (would trip React's getSnapshot
+  // cache and produce an infinite re-render loop).
+  const zones = useFloorPlan((s) => s.zones);
+  const allPlacedItems = useFloorPlan((s) => s.placedItems);
+  const zone = useMemo(
+    () => zones.find((z) => z.id === selectedZoneId) ?? null,
+    [zones, selectedZoneId],
   );
-  const placedItems = useFloorPlan((s) =>
-    s.placedItems.filter((p) => p.zoneId === s.selectedZoneId),
+  const placedItems = useMemo(
+    () => allPlacedItems.filter((p) => p.zoneId === selectedZoneId),
+    [allPlacedItems, selectedZoneId],
   );
   const updateZone = useFloorPlan((s) => s.updateZone);
   const addPlacedItem = useFloorPlan((s) => s.addPlacedItem);
