@@ -6,7 +6,7 @@ import {
   metersToPx,
 } from '../lib/zones';
 import type { BudgetTier } from '../lib/cost-engine';
-import type { ProjectRecord } from '../lib/db/types';
+import type { PlacedItemRecord, ProjectRecord } from '../lib/db/types';
 
 interface FloorPlanState {
   /** The id of the currently-open project, or null when no project is loaded. */
@@ -19,6 +19,9 @@ interface FloorPlanState {
   climateZone: string;
   zones: Zone[];
   selectedZoneId: string | null;
+  placedItems: PlacedItemRecord[];
+  /** Whether drag/resize snaps to the 0.25 m grid. */
+  snapEnabled: boolean;
 
   loadProject: (record: ProjectRecord) => void;
   addZone: (type: ZoneType, name: string) => string;
@@ -29,25 +32,29 @@ interface FloorPlanState {
   setBudgetTier: (tier: BudgetTier) => void;
   setContingencyPct: (pct: number) => void;
   setTaxEnabled: (enabled: boolean) => void;
+  setSnapEnabled: (enabled: boolean) => void;
+  addPlacedItem: (zoneId: string, itemId: string, quantity?: number) => string;
+  updatePlacedItem: (id: string, patch: Partial<Omit<PlacedItemRecord, 'id'>>) => void;
+  removePlacedItem: (id: string) => void;
   reset: () => void;
   toProjectRecord: () => ProjectRecord | null;
 }
 
 const DEFAULT_ZONE_SIZE = metersToPx(4);
 
-const INITIAL: Omit<
+const INITIAL: Pick<
   FloorPlanState,
-  | 'loadProject'
-  | 'addZone'
-  | 'updateZone'
-  | 'deleteZone'
-  | 'selectZone'
-  | 'setProjectName'
-  | 'setBudgetTier'
-  | 'setContingencyPct'
-  | 'setTaxEnabled'
-  | 'reset'
-  | 'toProjectRecord'
+  | 'projectId'
+  | 'projectName'
+  | 'templateId'
+  | 'budgetTier'
+  | 'contingencyPct'
+  | 'taxEnabled'
+  | 'climateZone'
+  | 'zones'
+  | 'selectedZoneId'
+  | 'placedItems'
+  | 'snapEnabled'
 > = {
   projectId: null,
   projectName: '',
@@ -58,6 +65,8 @@ const INITIAL: Omit<
   climateZone: 'tropical_indonesia',
   zones: [],
   selectedZoneId: null,
+  placedItems: [],
+  snapEnabled: true,
 };
 
 export const useFloorPlan = create<FloorPlanState>((set, get) => ({
@@ -73,6 +82,7 @@ export const useFloorPlan = create<FloorPlanState>((set, get) => ({
       taxEnabled: record.taxEnabled,
       climateZone: record.climateZone,
       zones: record.zones,
+      placedItems: record.placedItems ?? [],
       selectedZoneId: null,
     }),
 
@@ -99,6 +109,8 @@ export const useFloorPlan = create<FloorPlanState>((set, get) => ({
   deleteZone: (id) =>
     set((s) => ({
       zones: s.zones.filter((z) => z.id !== id),
+      // Remove orphaned placed items when their zone is deleted.
+      placedItems: s.placedItems.filter((p) => p.zoneId !== id),
       selectedZoneId: s.selectedZoneId === id ? null : s.selectedZoneId,
     })),
 
@@ -112,6 +124,23 @@ export const useFloorPlan = create<FloorPlanState>((set, get) => ({
     set({ contingencyPct: Math.min(0.15, Math.max(0.05, contingencyPct)) }),
 
   setTaxEnabled: (taxEnabled) => set({ taxEnabled }),
+
+  setSnapEnabled: (snapEnabled) => set({ snapEnabled }),
+
+  addPlacedItem: (zoneId, itemId, quantity = 1) => {
+    const id = nanoid(10);
+    const record: PlacedItemRecord = { id, zoneId, itemId, quantity, notes: '' };
+    set((s) => ({ placedItems: [...s.placedItems, record] }));
+    return id;
+  },
+
+  updatePlacedItem: (id, patch) =>
+    set((s) => ({
+      placedItems: s.placedItems.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+    })),
+
+  removePlacedItem: (id) =>
+    set((s) => ({ placedItems: s.placedItems.filter((p) => p.id !== id) })),
 
   reset: () => set(INITIAL),
 
@@ -127,6 +156,7 @@ export const useFloorPlan = create<FloorPlanState>((set, get) => ({
       taxEnabled: s.taxEnabled,
       climateZone: s.climateZone,
       zones: s.zones,
+      placedItems: s.placedItems,
       createdAt: 0,
       updatedAt: Date.now(),
     };

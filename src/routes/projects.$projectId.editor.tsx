@@ -68,6 +68,7 @@ function EditorPage() {
         'budgetTier',
         'contingencyPct',
         'taxEnabled',
+        'placedItems',
       ];
       if (watched.some((k) => state[k] !== prev[k])) persist();
     });

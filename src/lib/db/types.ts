@@ -1,6 +1,14 @@
 import type { Zone } from '../zones';
 import type { BudgetTier } from '../cost-engine';
 
+export interface PlacedItemRecord {
+  id: string;
+  itemId: string;
+  zoneId: string;
+  quantity: number;
+  notes: string;
+}
+
 export interface ProjectRecord {
   id: string;
   name: string;
@@ -10,6 +18,7 @@ export interface ProjectRecord {
   taxEnabled: boolean;
   climateZone: string;
   zones: Zone[];
+  placedItems: PlacedItemRecord[];
   createdAt: number;
   updatedAt: number;
 }

@@ -8,6 +8,8 @@ import { calculateCost, type BudgetTier, type CostCategory } from '../lib/cost-e
 import { deriveSurfacesFromZones } from '../lib/surfaces';
 import { formatIDR } from '../lib/currency';
 import { zoneAreaM2 } from '../lib/zones';
+import { loadCatalog, type Item } from '../lib/catalog';
+import { toPlacedItemInputs } from '../lib/placed-items';
 
 export const Route = createFileRoute('/projects/$projectId/estimate')({
   ssr: false,
@@ -31,12 +33,18 @@ function EstimatePage() {
   const reset = useFloorPlan((s) => s.reset);
   const projectName = useFloorPlan((s) => s.projectName);
   const zones = useFloorPlan((s) => s.zones);
+  const placedItems = useFloorPlan((s) => s.placedItems);
   const budgetTier = useFloorPlan((s) => s.budgetTier);
   const contingencyPct = useFloorPlan((s) => s.contingencyPct);
   const taxEnabled = useFloorPlan((s) => s.taxEnabled);
   const setBudgetTier = useFloorPlan((s) => s.setBudgetTier);
   const setContingencyPct = useFloorPlan((s) => s.setContingencyPct);
   const setTaxEnabled = useFloorPlan((s) => s.setTaxEnabled);
+  const [catalog, setCatalog] = useState<Item[]>([]);
+
+  useEffect(() => {
+    void loadCatalog().then(setCatalog);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -90,11 +98,11 @@ function EstimatePage() {
       budgetTier,
       contingencyPct,
       taxEnabled,
-      items: [],
+      items: toPlacedItemInputs(placedItems, catalog),
       surfaces: deriveSurfacesFromZones(zones),
       laborRates: {},
     });
-  }, [budgetTier, contingencyPct, taxEnabled, zones]);
+  }, [budgetTier, contingencyPct, taxEnabled, zones, placedItems, catalog]);
 
   if (load.kind === 'loading') {
     return (

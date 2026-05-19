@@ -10,6 +10,7 @@ export async function createProject(
     id: nanoid(8),
     ...input,
     zones: [],
+    placedItems: [],
     createdAt: now,
     updatedAt: now,
   };
@@ -18,16 +19,28 @@ export async function createProject(
   return record;
 }
 
+/**
+ * Backwards-compatible record migration: pre-v2 records lack `placedItems`,
+ * so we default it to `[]` here rather than running a formal IDB migration.
+ */
+function hydrate(record: ProjectRecord | undefined): ProjectRecord | null {
+  if (!record) return null;
+  return {
+    ...record,
+    placedItems: record.placedItems ?? [],
+  };
+}
+
 export async function getProject(id: string): Promise<ProjectRecord | null> {
   const db = await getDb();
   const record = await db.get('projects', id);
-  return record ?? null;
+  return hydrate(record);
 }
 
 export async function listProjects(): Promise<ProjectRecord[]> {
   const db = await getDb();
   const records = await db.getAllFromIndex('projects', 'by-updatedAt');
-  return records.reverse();
+  return records.reverse().map((r) => hydrate(r)!);
 }
 
 export async function saveProject(record: ProjectRecord): Promise<void> {
