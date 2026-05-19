@@ -39,6 +39,12 @@ interface FloorPlanState {
   addPlacedItem: (zoneId: string, itemId: string, quantity?: number) => string;
   updatePlacedItem: (id: string, patch: Partial<Omit<PlacedItemRecord, 'id'>>) => void;
   removePlacedItem: (id: string) => void;
+  /**
+   * Clone the given zone with the same dimensions, offset by 0.5 m, and
+   * select the new zone. Returns the new zone id, or null if the source
+   * zone does not exist. Locale controls the suffix ("(salinan)" vs "(copy)").
+   */
+  duplicateZone: (id: string, locale?: 'id' | 'en') => string | null;
   reset: () => void;
   toProjectRecord: () => ProjectRecord | null;
 }
@@ -150,6 +156,23 @@ export const useFloorPlan = create<FloorPlanState>((set, get) => ({
   removePlacedItem: (id) =>
     set((s) => ({ placedItems: s.placedItems.filter((p) => p.id !== id) })),
 
+  duplicateZone: (id, locale = 'id') => {
+    const source = get().zones.find((z) => z.id === id);
+    if (!source) return null;
+    const newId = nanoid(8);
+    const suffix = locale === 'en' ? '(copy)' : '(salinan)';
+    const offset = metersToPx(0.5);
+    const dup: Zone = {
+      ...source,
+      id: newId,
+      name: `${source.name} ${suffix}`,
+      x: source.x + offset,
+      y: source.y + offset,
+    };
+    set((s) => ({ zones: [...s.zones, dup], selectedZoneId: newId }));
+    return newId;
+  },
+
   reset: () => set(INITIAL),
 
   toProjectRecord: () => {
@@ -171,3 +194,15 @@ export const useFloorPlan = create<FloorPlanState>((set, get) => ({
     };
   },
 }));
+
+/**
+ * Reset the singleton store to its initial data state. Test-only helper —
+ * call from `beforeEach` so test cases don't leak state into each other.
+ * Production code should never call this.
+ *
+ * Uses merge mode (no second arg) so the action functions stay attached
+ * while only the data fields are reset.
+ */
+export function resetForTests(): void {
+  useFloorPlan.setState(INITIAL);
+}
