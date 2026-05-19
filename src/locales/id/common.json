@@ -7,6 +7,7 @@
   "nav": {
     "dashboard": "Beranda",
     "newProject": "Buat Proyek Baru",
+    "catalog": "Katalog Item",
     "settings": "Pengaturan"
   },
   "dashboard": {
@@ -69,6 +70,33 @@
     "perCategory": "Per Kategori",
     "assumptions": "Asumsi",
     "assumptionsBody": "Harga adalah perkiraan pasar Indonesia 2026. Biaya tenaga kerja dihitung sebagai persentase dari material per kategori. Harga akan disempurnakan dengan partner di Fase 3."
+  },
+  "catalog": {
+    "title": "Katalog Item",
+    "subtitle": "Jelajahi furnitur, pencahayaan, tanaman, dan fitur tetap untuk proyek Anda.",
+    "filters": "Filter",
+    "search": "Cari",
+    "searchPlaceholder": "Cari nama atau jenis…",
+    "tier": "Tingkat Anggaran",
+    "location": "Lokasi",
+    "location_all": "Semua",
+    "location_indoor": "Indoor",
+    "location_outdoor": "Outdoor",
+    "category": "Kategori",
+    "style": "Gaya",
+    "zone": "Zona",
+    "all": "Semua",
+    "clear": "Bersihkan",
+    "loading": "Memuat katalog…",
+    "countSummary_one": "{{count}} item",
+    "countSummary_other": "{{count}} item",
+    "empty": "Tidak ada item yang cocok dengan filter."
+  },
+  "style": {
+    "japandi": "Japandi",
+    "tropical_modern": "Tropical Modern",
+    "minimalis_skandinavia": "Minimalis Skandinavia",
+    "industrial": "Industrial"
   },
   "costCategory": {
     "furniture": "Furnitur",

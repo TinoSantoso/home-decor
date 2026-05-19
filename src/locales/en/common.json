@@ -7,6 +7,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "newProject": "New Project",
+    "catalog": "Item Catalog",
     "settings": "Settings"
   },
   "dashboard": {
@@ -69,6 +70,33 @@
     "perCategory": "Per Category",
     "assumptions": "Assumptions",
     "assumptionsBody": "Prices are coarse 2026 Indonesia market estimates. Labor is computed as a percentage of materials per category. Pricing will be refined with partners in Phase 3."
+  },
+  "catalog": {
+    "title": "Item Catalog",
+    "subtitle": "Browse furniture, lighting, plants, and fixtures for your project.",
+    "filters": "Filters",
+    "search": "Search",
+    "searchPlaceholder": "Search by name or type…",
+    "tier": "Budget Tier",
+    "location": "Location",
+    "location_all": "All",
+    "location_indoor": "Indoor",
+    "location_outdoor": "Outdoor",
+    "category": "Category",
+    "style": "Style",
+    "zone": "Zone",
+    "all": "All",
+    "clear": "Clear",
+    "loading": "Loading catalog…",
+    "countSummary_one": "{{count}} item",
+    "countSummary_other": "{{count}} items",
+    "empty": "No items match the filters."
+  },
+  "style": {
+    "japandi": "Japandi",
+    "tropical_modern": "Tropical Modern",
+    "minimalis_skandinavia": "Scandinavian Minimal",
+    "industrial": "Industrial"
   },
   "costCategory": {
     "furniture": "Furniture",

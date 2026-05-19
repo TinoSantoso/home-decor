@@ -38,12 +38,20 @@ function DashboardPage() {
             {t('dashboard.subtitle')}
           </p>
         </div>
-        <Link
-          to="/projects/new"
-          className="rounded-[var(--radius)] bg-[color:var(--color-accent)] px-4 py-2 text-sm font-medium text-[color:var(--color-accent-fg)]"
-        >
-          {t('nav.newProject')}
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            to="/catalog"
+            className="rounded-[var(--radius)] border border-[color:var(--color-border)] px-3 py-1.5 text-sm hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
+          >
+            {t('nav.catalog')}
+          </Link>
+          <Link
+            to="/projects/new"
+            className="rounded-[var(--radius)] bg-[color:var(--color-accent)] px-4 py-2 text-sm font-medium text-[color:var(--color-accent-fg)]"
+          >
+            {t('nav.newProject')}
+          </Link>
+        </div>
       </header>
 
       {projects === null && (
