@@ -21,7 +21,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "verify-deps": "bash scripts/verify-deps.sh",
-    "ci": "npm run verify-deps && npm run typecheck && npm run lint && npm run test"
+    "ci": "npm run verify-deps && npm run typecheck && npm run lint && npm run test && npm run test:e2e"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1048.0",

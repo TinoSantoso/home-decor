@@ -12,5 +12,8 @@ export default defineConfig({
     // Default environment is `node` to keep pure-logic tests fast.
     // Component tests opt in to happy-dom via a `@vitest-environment happy-dom`
     // pragma at the top of each .test.tsx file. See plan §17.
+    // Vitest's default include matches `*.spec.ts` too; exclude the
+    // Playwright dir so e2e specs aren't run by the unit runner.
+    exclude: ['**/node_modules/**', '**/dist/**', 'tests-e2e/**'],
   },
 });

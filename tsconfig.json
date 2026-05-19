@@ -27,5 +27,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "tests", "scripts", "prisma"]
+  "include": ["src", "tests", "tests-e2e", "scripts", "prisma", "vitest.config.ts", "playwright.config.ts"]
 }
