@@ -1,14 +1,8 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type PointerEvent as ReactPointerEvent,
-} from 'react';
+import { useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFloorPlan } from '../../stores/floor-plan';
 import { deriveBeforeSnapshot } from '../../lib/tour-snapshot';
+import { useWipeSliderDrag } from './useWipeSliderDrag';
 import TourScene from './TourScene';
 
 /**
@@ -31,9 +25,6 @@ export function BeforeAfterCompare() {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Compute the "before" snapshot once per relevant state change.
-  // Selecting raw slices and deriving in useMemo avoids the Zustand
-  // selector pitfall (returning a fresh array per render).
   const zones = useFloorPlan((s) => s.zones);
   const placedItems = useFloorPlan((s) => s.placedItems);
   const styleTag = useFloorPlan((s) => s.styleTag);
@@ -42,80 +33,8 @@ export function BeforeAfterCompare() {
     [zones, placedItems, styleTag],
   );
 
-  const [containerWidth, setContainerWidth] = useState(0);
-  const [sliderPx, setSliderPx] = useState(0);
-  const draggingRef = useRef(false);
-  const rafIdRef = useRef<number | null>(null);
-
-  // Measure container on mount and on resize so the slider math has a
-  // real width. Set the initial slider position to the middle.
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const updateWidth = () => {
-      const w = el.getBoundingClientRect().width;
-      setContainerWidth(w);
-      setSliderPx((prev) => (prev === 0 ? w / 2 : Math.min(prev, w)));
-    };
-    updateWidth();
-
-    const ro = new ResizeObserver(updateWidth);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  const setSliderFromClientX = useCallback((clientX: number) => {
-    const el = containerRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const x = clientX - rect.left;
-    setSliderPx(Math.max(0, Math.min(x, rect.width)));
-  }, []);
-
-  // rAF-throttled pointer-move — coalesces fast pointer events into at
-  // most one React re-render per frame.
-  const handlePointerMove = useCallback(
-    (e: PointerEvent) => {
-      if (!draggingRef.current) return;
-      if (rafIdRef.current !== null) return;
-      const clientX = e.clientX;
-      rafIdRef.current = requestAnimationFrame(() => {
-        rafIdRef.current = null;
-        setSliderFromClientX(clientX);
-      });
-    },
-    [setSliderFromClientX],
-  );
-
-  const stopDragging = useCallback(() => {
-    draggingRef.current = false;
-    if (rafIdRef.current !== null) {
-      cancelAnimationFrame(rafIdRef.current);
-      rafIdRef.current = null;
-    }
-  }, []);
-
-  // Attach window-level listeners only while dragging so we keep
-  // tracking the pointer even if it leaves the divider element.
-  useEffect(() => {
-    window.addEventListener('pointermove', handlePointerMove);
-    window.addEventListener('pointerup', stopDragging);
-    window.addEventListener('pointercancel', stopDragging);
-    return () => {
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', stopDragging);
-      window.removeEventListener('pointercancel', stopDragging);
-      if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current);
-        rafIdRef.current = null;
-      }
-    };
-  }, [handlePointerMove, stopDragging]);
-
-  function handleDividerPointerDown(e: ReactPointerEvent<HTMLDivElement>) {
-    draggingRef.current = true;
-    setSliderFromClientX(e.clientX);
-  }
+  const { sliderPx, containerWidth, handleDividerPointerDown, handleDividerKeyDown } =
+    useWipeSliderDrag(containerRef);
 
   // Clip-paths: insets are (top, right, bottom, left).
   // Before (left) shows columns [0 .. sliderPx]; clip right edge.
@@ -171,6 +90,7 @@ export function BeforeAfterCompare() {
         aria-valuemax={containerWidth || 1}
         aria-valuenow={Math.round(sliderPx)}
         onPointerDown={handleDividerPointerDown}
+        onKeyDown={handleDividerKeyDown}
         className="absolute top-0 z-30 h-full w-1 -translate-x-1/2 cursor-ew-resize bg-white/90 shadow-[0_0_0_1px_rgba(0,0,0,0.25)]"
         style={{ left: `${sliderPx}px`, touchAction: 'none' }}
       >
