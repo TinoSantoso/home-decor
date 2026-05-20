@@ -10,6 +10,9 @@ build/
 .vinxi/
 .tanstack/
 
+# Git worktrees (subagent-driven dev branches)
+.worktrees/
+
 # Generated route tree (TanStack Router)
 src/routeTree.gen.ts
 
