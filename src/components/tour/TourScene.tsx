@@ -7,7 +7,8 @@ import {
   computeGroundSize,
   zoneToTransform,
 } from '../../lib/tour-transform';
-import { TOUR_GROUND_COLOR, TOUR_ZONE_COLORS_3D } from '../../lib/tour-colors';
+import { TOUR_GROUND_COLOR } from '../../lib/tour-colors';
+import { getZoneColor } from '../../lib/tour-materials';
 import { loadCatalog } from '../../lib/catalog';
 import type { Item } from '../../lib/catalog';
 import { TourControls } from './TourControls';
@@ -27,6 +28,7 @@ export default function TourScene() {
   const selectZone = useFloorPlan((s) => s.selectZone);
   const tourMode = useFloorPlan((s) => s.tourMode);
   const placedItems = useFloorPlan((s) => s.placedItems);
+  const styleTag = useFloorPlan((s) => s.styleTag);
 
   const [catalog, setCatalog] = useState<Item[]>([]);
 
@@ -90,7 +92,7 @@ export default function TourScene() {
           {/* Zone boxes */}
           {transforms.map((t, idx) => {
             const zone = zones[idx]!;
-            const color = TOUR_ZONE_COLORS_3D[zone.type];
+            const color = getZoneColor(zone.type, styleTag);
             return (
               <ZoneMesh
                 key={t.zoneId}
@@ -112,6 +114,7 @@ export default function TourScene() {
                 key={p.id}
                 item={item}
                 position={p.position3d}
+                styleTag={styleTag}
               />
             );
           })}
