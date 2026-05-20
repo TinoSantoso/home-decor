@@ -8,6 +8,8 @@ export interface PlacedItemRecord {
   zoneId: string;
   quantity: number;
   notes: string;
+  /** World-space position [x, y, z] in meters set when placed via the 3D tour. */
+  position3d?: [number, number, number];
 }
 
 export interface ProjectRecord {

@@ -88,7 +88,20 @@
     "modeBadgeWalk": "Mode Jalan",
     "modeBadgeOrbit": "Mode Orbit",
     "switchToOrbit": "Beralih ke mode orbit",
-    "switchToWalk": "Beralih ke mode jalan"
+    "switchToWalk": "Beralih ke mode jalan",
+    "placement": {
+      "title": "Tempatkan Barang",
+      "selectZone": "Pilih zona",
+      "selectItem": "Pilih barang",
+      "activateMode": "Aktifkan mode penempatan",
+      "deactivateMode": "Nonaktifkan mode penempatan",
+      "modeActive": "Mode penempatan aktif — klik zona untuk menempatkan barang",
+      "modeInactive": "Mode penempatan tidak aktif",
+      "noZones": "Belum ada zona.",
+      "noCatalog": "Memuat katalog…",
+      "placed": "Barang ditempatkan",
+      "cancel": "Batal"
+    }
   },
   "estimate": {
     "title": "Estimasi Biaya",

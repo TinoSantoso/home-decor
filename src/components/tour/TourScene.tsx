@@ -1,4 +1,4 @@
-import { Suspense, useMemo } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Grid } from '@react-three/drei';
 import { useFloorPlan } from '../../stores/floor-plan';
@@ -8,23 +8,31 @@ import {
   zoneToTransform,
 } from '../../lib/tour-transform';
 import { TOUR_GROUND_COLOR, TOUR_ZONE_COLORS_3D } from '../../lib/tour-colors';
+import { loadCatalog } from '../../lib/catalog';
+import type { Item } from '../../lib/catalog';
 import { TourControls } from './TourControls';
 import { TourModeToggle } from './TourModeToggle';
+import { ZoneMesh } from './ZoneMesh';
+import { PlacedItemMesh } from './PlacedItemMesh';
+import { ItemPlacementPanel } from './ItemPlacementPanel';
+import { useZoneClickHandler } from './useZoneClickHandler';
 
 /**
- * Phase 2 slice 1: orbital 3D view of the floor plan with each zone
- * rendered as a translucent box.
- *
- * Phase 2 slice 2: toggleable first-person walk mode via TourControls.
- *
- * Rendered only inside an `ssr: false` route. Canvas mounts a WebGL
- * context, so SSR would throw.
+ * Phase 2 slice 3: item placement via click-to-place. Zone boxes extracted
+ * into ZoneMesh; placed items rendered as primitive meshes via PlacedItemMesh.
  */
 export default function TourScene() {
   const zones = useFloorPlan((s) => s.zones);
   const selectedZoneId = useFloorPlan((s) => s.selectedZoneId);
   const selectZone = useFloorPlan((s) => s.selectZone);
   const tourMode = useFloorPlan((s) => s.tourMode);
+  const placedItems = useFloorPlan((s) => s.placedItems);
+
+  const [catalog, setCatalog] = useState<Item[]>([]);
+
+  useEffect(() => {
+    loadCatalog().then(setCatalog).catch(() => undefined);
+  }, []);
 
   const groundSize = useMemo(() => computeGroundSize(zones), [zones]);
   const transforms = useMemo(() => zones.map((z) => zoneToTransform(z)), [zones]);
@@ -33,6 +41,8 @@ export default function TourScene() {
     DEFAULT_BOX_HEIGHT_M / 2,
     groundSize / 2,
   ];
+
+  const handleZoneClick = useZoneClickHandler();
 
   return (
     <div className="relative h-[700px] w-full overflow-hidden rounded-[var(--radius)] border border-[color:var(--color-border)] bg-[oklch(95%_0.005_95)]">
@@ -62,13 +72,12 @@ export default function TourScene() {
             <meshStandardMaterial color={TOUR_GROUND_COLOR} />
           </mesh>
 
-          {/* 1 m grid overlay for scale */}
+          {/* 1 m grid overlay */}
           <Grid
             position={[groundSize / 2, 0.01, groundSize / 2]}
             args={[groundSize, groundSize]}
             cellSize={1}
             cellThickness={0.5}
-            // Three.js color parser doesn't accept oklch() — use hex.
             cellColor="#ccc8c0"
             sectionSize={5}
             sectionThickness={1}
@@ -82,24 +91,28 @@ export default function TourScene() {
           {transforms.map((t, idx) => {
             const zone = zones[idx]!;
             const color = TOUR_ZONE_COLORS_3D[zone.type];
-            const isSelected = zone.id === selectedZoneId;
             return (
-              <mesh
+              <ZoneMesh
                 key={t.zoneId}
-                position={t.position}
-                scale={t.scale}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  selectZone(zone.id);
-                }}
-              >
-                <boxGeometry args={[1, 1, 1]} />
-                <meshStandardMaterial
-                  color={color}
-                  transparent
-                  opacity={isSelected ? 0.92 : 0.7}
-                />
-              </mesh>
+                transform={t}
+                color={color}
+                isSelected={zone.id === selectedZoneId}
+                onClick={(e) => handleZoneClick(e, zone.id, t)}
+              />
+            );
+          })}
+
+          {/* Placed item meshes */}
+          {placedItems.map((p) => {
+            if (!p.position3d) return null;
+            const item = catalog.find((c) => c.id === p.itemId);
+            if (!item) return null;
+            return (
+              <PlacedItemMesh
+                key={p.id}
+                item={item}
+                position={p.position3d}
+              />
             );
           })}
 
@@ -112,7 +125,8 @@ export default function TourScene() {
         </Suspense>
       </Canvas>
 
-      {/* Overlay button — outside Canvas, plain DOM */}
+      {/* Overlays — outside Canvas, plain DOM */}
+      <ItemPlacementPanel />
       <TourModeToggle />
     </div>
   );
