@@ -89,6 +89,11 @@
     "modeBadgeOrbit": "Mode Orbit",
     "switchToOrbit": "Beralih ke mode orbit",
     "switchToWalk": "Beralih ke mode jalan",
+    "compare": "Bandingkan",
+    "compareExit": "Keluar dari mode bandingkan",
+    "compareBefore": "Sebelum",
+    "compareAfter": "Sesudah",
+    "compareSliderLabel": "Geser untuk membandingkan sebelum dan sesudah",
     "placement": {
       "title": "Tempatkan Barang",
       "selectZone": "Pilih zona",

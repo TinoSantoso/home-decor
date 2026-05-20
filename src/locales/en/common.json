@@ -89,6 +89,11 @@
     "modeBadgeOrbit": "Orbit Mode",
     "switchToOrbit": "Switch to orbit mode",
     "switchToWalk": "Switch to walk mode",
+    "compare": "Compare",
+    "compareExit": "Exit compare mode",
+    "compareBefore": "Before",
+    "compareAfter": "After",
+    "compareSliderLabel": "Drag to compare before and after",
     "placement": {
       "title": "Place Item",
       "selectZone": "Select zone",

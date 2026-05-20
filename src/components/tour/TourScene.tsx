@@ -11,6 +11,7 @@ import { TOUR_GROUND_COLOR } from '../../lib/tour-colors';
 import { getZoneColor } from '../../lib/tour-materials';
 import { loadCatalog } from '../../lib/catalog';
 import type { Item } from '../../lib/catalog';
+import type { TourSnapshot } from '../../lib/tour-snapshot';
 import { TourControls } from './TourControls';
 import { TourModeToggle } from './TourModeToggle';
 import { ZoneMesh } from './ZoneMesh';
@@ -18,17 +19,38 @@ import { PlacedItemMesh } from './PlacedItemMesh';
 import { ItemPlacementPanel } from './ItemPlacementPanel';
 import { useZoneClickHandler } from './useZoneClickHandler';
 
+interface TourSceneProps {
+  /**
+   * Optional read-only snapshot of floor-plan state. When provided the
+   * scene renders from the snapshot instead of pulling from the live
+   * store; interactive overlays (TourModeToggle, ItemPlacementPanel)
+   * are also suppressed. Used by BeforeAfterCompare (Phase 2 slice 5).
+   * Default `undefined` = live store behaviour (Phase 2 slices 1-4).
+   */
+  snapshot?: TourSnapshot;
+}
+
 /**
- * Phase 2 slice 3: item placement via click-to-place. Zone boxes extracted
- * into ZoneMesh; placed items rendered as primitive meshes via PlacedItemMesh.
+ * Phase 2 slice 5: optionally renders from a static snapshot for the
+ * Before/After wipe-slider compare. Zone boxes are still rendered by
+ * ZoneMesh; placed items by PlacedItemMesh.
  */
-export default function TourScene() {
-  const zones = useFloorPlan((s) => s.zones);
-  const selectedZoneId = useFloorPlan((s) => s.selectedZoneId);
+export default function TourScene({ snapshot }: TourSceneProps) {
+  // Live-store hooks — must always be called (Rules of Hooks). When a
+  // snapshot is provided we ignore the values and read from the
+  // snapshot instead.
+  const liveZones = useFloorPlan((s) => s.zones);
+  const liveSelectedZoneId = useFloorPlan((s) => s.selectedZoneId);
+  const livePlacedItems = useFloorPlan((s) => s.placedItems);
+  const liveStyleTag = useFloorPlan((s) => s.styleTag);
+
   const selectZone = useFloorPlan((s) => s.selectZone);
   const tourMode = useFloorPlan((s) => s.tourMode);
-  const placedItems = useFloorPlan((s) => s.placedItems);
-  const styleTag = useFloorPlan((s) => s.styleTag);
+
+  const zones = snapshot ? snapshot.zones : liveZones;
+  const selectedZoneId = snapshot ? snapshot.selectedZoneId : liveSelectedZoneId;
+  const placedItems = snapshot ? snapshot.placedItems : livePlacedItems;
+  const styleTag = snapshot ? snapshot.styleTag : liveStyleTag;
 
   const [catalog, setCatalog] = useState<Item[]>([]);
 
@@ -45,6 +67,7 @@ export default function TourScene() {
   ];
 
   const handleZoneClick = useZoneClickHandler();
+  const isSnapshot = snapshot !== undefined;
 
   return (
     <div className="relative h-[700px] w-full overflow-hidden rounded-[var(--radius)] border border-[color:var(--color-border)] bg-[oklch(95%_0.005_95)]">
@@ -55,7 +78,9 @@ export default function TourScene() {
           near: 0.1,
           far: groundSize * 5,
         }}
-        onPointerMissed={() => selectZone(null)}
+        onPointerMissed={() => {
+          if (!isSnapshot) selectZone(null);
+        }}
       >
         <Suspense fallback={null}>
           <ambientLight intensity={0.7} />
@@ -99,7 +124,13 @@ export default function TourScene() {
                 transform={t}
                 color={color}
                 isSelected={zone.id === selectedZoneId}
-                onClick={(e) => handleZoneClick(e, zone.id, t)}
+                onClick={(e) => {
+                  if (isSnapshot) {
+                    e.stopPropagation();
+                    return;
+                  }
+                  handleZoneClick(e, zone.id, t);
+                }}
               />
             );
           })}
@@ -128,9 +159,15 @@ export default function TourScene() {
         </Suspense>
       </Canvas>
 
-      {/* Overlays — outside Canvas, plain DOM */}
-      <ItemPlacementPanel />
-      <TourModeToggle />
+      {/* Overlays — outside Canvas, plain DOM. Suppressed in snapshot
+          mode because both BeforeAfterCompare instances share the same
+          overlay space and the snapshot view is read-only. */}
+      {!isSnapshot && (
+        <>
+          <ItemPlacementPanel />
+          <TourModeToggle />
+        </>
+      )}
     </div>
   );
 }

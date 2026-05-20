@@ -5,6 +5,11 @@ import { useFloorPlan } from '../stores/floor-plan';
 import { getProject } from '../lib/db/projects';
 
 const TourScene = lazy(() => import('../components/tour/TourScene'));
+const BeforeAfterCompare = lazy(() =>
+  import('../components/tour/BeforeAfterCompare').then((m) => ({
+    default: m.BeforeAfterCompare,
+  })),
+);
 
 export const Route = createFileRoute('/projects/$projectId/tour')({
   ssr: false,
@@ -21,6 +26,7 @@ function TourPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [load, setLoad] = useState<LoadState>({ kind: 'loading' });
+  const [compareMode, setCompareMode] = useState(false);
 
   const loadProject = useFloorPlan((s) => s.loadProject);
   const reset = useFloorPlan((s) => s.reset);
@@ -89,13 +95,27 @@ function TourPage() {
             {t('tour.subtitle')}
           </p>
         </div>
-        <Link
-          to="/projects/$projectId/estimate"
-          params={{ projectId }}
-          className="rounded-[var(--radius)] border border-[color:var(--color-border)] px-3 py-1.5 text-sm hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
-        >
-          {t('estimate.viewEstimate')}
-        </Link>
+        <div className="flex items-center gap-2">
+          {zones.length > 0 && (
+            <button
+              type="button"
+              data-testid="tour-compare-toggle"
+              onClick={() => setCompareMode((v) => !v)}
+              aria-pressed={compareMode}
+              aria-label={compareMode ? t('tour.compareExit') : t('tour.compare')}
+              className="rounded-[var(--radius)] border border-[color:var(--color-border)] px-3 py-1.5 text-sm hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)] aria-pressed:bg-[color:var(--color-accent)] aria-pressed:text-[color:var(--color-accent-fg)]"
+            >
+              {compareMode ? t('tour.compareExit') : t('tour.compare')}
+            </button>
+          )}
+          <Link
+            to="/projects/$projectId/estimate"
+            params={{ projectId }}
+            className="rounded-[var(--radius)] border border-[color:var(--color-border)] px-3 py-1.5 text-sm hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
+          >
+            {t('estimate.viewEstimate')}
+          </Link>
+        </div>
       </header>
 
       {zones.length === 0 ? (
@@ -112,7 +132,7 @@ function TourPage() {
             </div>
           }
         >
-          <TourScene />
+          {compareMode ? <BeforeAfterCompare /> : <TourScene />}
         </Suspense>
       )}
 
