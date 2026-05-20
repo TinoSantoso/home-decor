@@ -82,7 +82,13 @@
     "backToEditor": "Kembali ke Editor",
     "loadingScene": "Memuat pemandangan 3D…",
     "noZones": "Belum ada zona. Tambahkan zona di editor untuk melihat tur 3D.",
-    "controlsHint": "Tarik kiri untuk memutar · tarik kanan untuk geser · gulir untuk zoom · klik zona untuk memilih"
+    "controlsHint": "Tarik kiri untuk memutar · tarik kanan untuk geser · gulir untuk zoom · klik zona untuk memilih",
+    "modeWalk": "Jalan",
+    "modeOrbit": "Orbit",
+    "modeBadgeWalk": "Mode Jalan",
+    "modeBadgeOrbit": "Mode Orbit",
+    "switchToOrbit": "Beralih ke mode orbit",
+    "switchToWalk": "Beralih ke mode jalan"
   },
   "estimate": {
     "title": "Estimasi Biaya",

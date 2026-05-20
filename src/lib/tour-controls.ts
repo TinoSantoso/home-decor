@@ -13,6 +13,9 @@
  * movement is never faster than axis-aligned movement.
  */
 
+/** Default walk speed in metres per second. */
+export const DEFAULT_WALK_SPEED_MS = 3;
+
 /** Keys currently held — values are `boolean | undefined`. */
 export type HeldKeys = Partial<Record<string, boolean>>;
 

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { OrbitControls, PointerLockControls } from '@react-three/drei';
 import type { PointerLockControls as PointerLockControlsImpl } from 'three-stdlib';
-import { keysToVelocity, type HeldKeys } from '../../lib/tour-controls';
+import { DEFAULT_WALK_SPEED_MS, keysToVelocity, type HeldKeys } from '../../lib/tour-controls';
 
 interface TourControlsProps {
   mode: 'orbit' | 'walk';
@@ -23,7 +23,6 @@ export function TourControls({ mode, target, minDistance = 2, maxDistance = 40 }
   const plcRef = useRef<PointerLockControlsImpl>(null);
   const heldKeys = useRef<HeldKeys>({});
 
-  // Keyboard listeners for walk mode.
   useEffect(() => {
     if (mode !== 'walk') return;
 
@@ -45,16 +44,14 @@ export function TourControls({ mode, target, minDistance = 2, maxDistance = 40 }
     };
   }, [mode]);
 
-  // Apply WASD movement each frame when pointer is locked.
   useFrame((_state, delta) => {
     if (mode !== 'walk') return;
     const plc = plcRef.current;
     if (!plc || !plc.isLocked) return;
 
-    const [dx, , dz] = keysToVelocity(heldKeys.current, delta, 3);
+    const [dx, , dz] = keysToVelocity(heldKeys.current, delta, DEFAULT_WALK_SPEED_MS);
     if (dx === 0 && dz === 0) return;
 
-    // Move the camera along its local axes (forward/strafe).
     plc.moveForward(-dz);
     plc.moveRight(dx);
   });

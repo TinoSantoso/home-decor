@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useFloorPlan } from '../../stores/floor-plan';
 
 /**
@@ -10,6 +11,7 @@ import { useFloorPlan } from '../../stores/floor-plan';
  * a real gesture.
  */
 export function TourModeToggle() {
+  const { t } = useTranslation();
   const tourMode = useFloorPlan((s) => s.tourMode);
   const setTourMode = useFloorPlan((s) => s.setTourMode);
 
@@ -26,7 +28,7 @@ export function TourModeToggle() {
         data-testid="tour-mode-badge"
         className="rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white"
       >
-        {isWalk ? 'Jalan' : 'Orbit'}
+        {isWalk ? t('tour.modeWalk') : t('tour.modeOrbit')}
       </span>
 
       <button
@@ -34,10 +36,10 @@ export function TourModeToggle() {
         data-testid="tour-mode-toggle"
         onClick={handleClick}
         className="rounded-md bg-black/60 px-3 py-1.5 text-sm font-medium text-white hover:bg-black/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
-        aria-label={isWalk ? 'Beralih ke mode orbit' : 'Beralih ke mode jalan'}
+        aria-label={isWalk ? t('tour.switchToOrbit') : t('tour.switchToWalk')}
         aria-pressed={isWalk}
       >
-        {isWalk ? 'Mode Orbit' : 'Mode Jalan'}
+        {isWalk ? t('tour.modeBadgeOrbit') : t('tour.modeBadgeWalk')}
       </button>
     </div>
   );
