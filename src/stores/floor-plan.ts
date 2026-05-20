@@ -24,6 +24,8 @@ interface FloorPlanState {
   placedItems: PlacedItemRecord[];
   /** Whether drag/resize snaps to the 0.25 m grid. */
   snapEnabled: boolean;
+  /** Camera mode for the 3D tour: orbital overview or first-person walk. */
+  tourMode: 'orbit' | 'walk';
 
   loadProject: (record: ProjectRecord) => void;
   addZone: (type: ZoneType, name: string) => string;
@@ -45,6 +47,7 @@ interface FloorPlanState {
    * zone does not exist. Locale controls the suffix ("(salinan)" vs "(copy)").
    */
   duplicateZone: (id: string, locale?: 'id' | 'en') => string | null;
+  setTourMode: (mode: 'orbit' | 'walk') => void;
   reset: () => void;
   toProjectRecord: () => ProjectRecord | null;
 }
@@ -65,6 +68,7 @@ const INITIAL: Pick<
   | 'selectedZoneId'
   | 'placedItems'
   | 'snapEnabled'
+  | 'tourMode'
 > = {
   projectId: null,
   projectName: '',
@@ -78,6 +82,7 @@ const INITIAL: Pick<
   selectedZoneId: null,
   placedItems: [],
   snapEnabled: true,
+  tourMode: 'orbit',
 };
 
 export const useFloorPlan = create<FloorPlanState>((set, get) => ({
@@ -172,6 +177,8 @@ export const useFloorPlan = create<FloorPlanState>((set, get) => ({
     set((s) => ({ zones: [...s.zones, dup], selectedZoneId: newId }));
     return newId;
   },
+
+  setTourMode: (mode) => set({ tourMode: mode }),
 
   reset: () => set(INITIAL),
 

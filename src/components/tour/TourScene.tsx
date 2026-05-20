@@ -1,6 +1,6 @@
 import { Suspense, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Grid } from '@react-three/drei';
+import { Grid } from '@react-three/drei';
 import { useFloorPlan } from '../../stores/floor-plan';
 import {
   DEFAULT_BOX_HEIGHT_M,
@@ -8,11 +8,14 @@ import {
   zoneToTransform,
 } from '../../lib/tour-transform';
 import { TOUR_GROUND_COLOR, TOUR_ZONE_COLORS_3D } from '../../lib/tour-colors';
+import { TourControls } from './TourControls';
+import { TourModeToggle } from './TourModeToggle';
 
 /**
  * Phase 2 slice 1: orbital 3D view of the floor plan with each zone
- * rendered as a translucent box. No items, materials, or first-person
- * walk yet — those are upcoming slices.
+ * rendered as a translucent box.
+ *
+ * Phase 2 slice 2: toggleable first-person walk mode via TourControls.
  *
  * Rendered only inside an `ssr: false` route. Canvas mounts a WebGL
  * context, so SSR would throw.
@@ -21,6 +24,7 @@ export default function TourScene() {
   const zones = useFloorPlan((s) => s.zones);
   const selectedZoneId = useFloorPlan((s) => s.selectedZoneId);
   const selectZone = useFloorPlan((s) => s.selectZone);
+  const tourMode = useFloorPlan((s) => s.tourMode);
 
   const groundSize = useMemo(() => computeGroundSize(zones), [zones]);
   const transforms = useMemo(() => zones.map((z) => zoneToTransform(z)), [zones]);
@@ -31,7 +35,7 @@ export default function TourScene() {
   ];
 
   return (
-    <div className="h-[700px] w-full overflow-hidden rounded-[var(--radius)] border border-[color:var(--color-border)] bg-[oklch(95%_0.005_95)]">
+    <div className="relative h-[700px] w-full overflow-hidden rounded-[var(--radius)] border border-[color:var(--color-border)] bg-[oklch(95%_0.005_95)]">
       <Canvas
         camera={{
           position: [groundSize * 0.9, groundSize * 0.8, groundSize * 1.2],
@@ -99,16 +103,17 @@ export default function TourScene() {
             );
           })}
 
-          <OrbitControls
+          <TourControls
+            mode={tourMode}
             target={center}
-            makeDefault
-            enablePan
             minDistance={2}
             maxDistance={groundSize * 4}
-            maxPolarAngle={Math.PI / 2 - 0.05}
           />
         </Suspense>
       </Canvas>
+
+      {/* Overlay button — outside Canvas, plain DOM */}
+      <TourModeToggle />
     </div>
   );
 }
