@@ -38,6 +38,33 @@ describe('placementMode store slice', () => {
   });
 });
 
+describe('pendingPlacementItemId store slice', () => {
+  beforeEach(() => {
+    resetForTests();
+  });
+
+  it('defaults to null', () => {
+    expect(useFloorPlan.getState().pendingPlacementItemId).toBeNull();
+  });
+
+  it('setPendingPlacementItemId stores a string value', () => {
+    useFloorPlan.getState().setPendingPlacementItemId('sofa-modular-japandi');
+    expect(useFloorPlan.getState().pendingPlacementItemId).toBe('sofa-modular-japandi');
+  });
+
+  it('setPendingPlacementItemId accepts null to clear', () => {
+    useFloorPlan.getState().setPendingPlacementItemId('x');
+    useFloorPlan.getState().setPendingPlacementItemId(null);
+    expect(useFloorPlan.getState().pendingPlacementItemId).toBeNull();
+  });
+
+  it('resetForTests clears it back to null', () => {
+    useFloorPlan.getState().setPendingPlacementItemId('x');
+    resetForTests();
+    expect(useFloorPlan.getState().pendingPlacementItemId).toBeNull();
+  });
+});
+
 describe('placeItemAt store action', () => {
   beforeEach(() => {
     resetForTests();

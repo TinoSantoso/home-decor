@@ -96,11 +96,8 @@
       "activateMode": "Aktifkan mode penempatan",
       "deactivateMode": "Nonaktifkan mode penempatan",
       "modeActive": "Mode penempatan aktif — klik zona untuk menempatkan barang",
-      "modeInactive": "Mode penempatan tidak aktif",
       "noZones": "Belum ada zona.",
-      "noCatalog": "Memuat katalog…",
-      "placed": "Barang ditempatkan",
-      "cancel": "Batal"
+      "noCatalog": "Memuat katalog…"
     }
   },
   "estimate": {

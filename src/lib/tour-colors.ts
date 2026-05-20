@@ -25,3 +25,6 @@ export const TOUR_ZONE_COLORS_3D: Record<ZoneType, string> = {
 };
 
 export const TOUR_GROUND_COLOR = '#f5f3ef';
+
+/** Placeholder color for items before style palettes land in slice 4. */
+export const ITEM_PLACEHOLDER_HEX = '#8a7d6a';

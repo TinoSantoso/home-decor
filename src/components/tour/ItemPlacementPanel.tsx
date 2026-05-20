@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFloorPlan } from '../../stores/floor-plan';
-import { loadCatalog } from '../../lib/catalog';
+import { loadCatalog, pickItemName } from '../../lib/catalog';
 import type { Item } from '../../lib/catalog';
 
 /**
@@ -17,7 +17,7 @@ import type { Item } from '../../lib/catalog';
  * `placeItemAt` with the selected item.
  */
 export function ItemPlacementPanel() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const zones = useFloorPlan((s) => s.zones);
   const placementMode = useFloorPlan((s) => s.placementMode);
@@ -50,8 +50,8 @@ export function ItemPlacementPanel() {
   // Derive the display name of the currently-selected item.
   const selectedItemName = useMemo(() => {
     const item = catalog.find((c) => c.id === selectedItemId);
-    return item?.name.id ?? '';
-  }, [catalog, selectedItemId]);
+    return item ? pickItemName(item, i18n.language) : '';
+  }, [catalog, selectedItemId, i18n.language]);
 
   function handleTogglePlacement() {
     if (placementMode) {
@@ -112,7 +112,7 @@ export function ItemPlacementPanel() {
           >
             {catalog.map((item) => (
               <option key={item.id} value={item.id}>
-                {item.name.id}
+                {pickItemName(item, i18n.language)}
               </option>
             ))}
           </select>

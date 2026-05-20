@@ -207,7 +207,7 @@ export const useFloorPlan = create<FloorPlanState>((set, get) => ({
       itemId,
       quantity: 1,
       notes: '',
-      ...(pos ? { position3d: pos } : {}),
+      position3d: pos,
     };
     set((s) => ({ placedItems: [...s.placedItems, record] }));
     return id;

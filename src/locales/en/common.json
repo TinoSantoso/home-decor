@@ -96,11 +96,8 @@
       "activateMode": "Activate placement mode",
       "deactivateMode": "Deactivate placement mode",
       "modeActive": "Placement mode active — click a zone to place the item",
-      "modeInactive": "Placement mode inactive",
       "noZones": "No zones yet.",
-      "noCatalog": "Loading catalog…",
-      "placed": "Item placed",
-      "cancel": "Cancel"
+      "noCatalog": "Loading catalog…"
     }
   },
   "estimate": {

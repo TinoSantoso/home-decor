@@ -1,11 +1,6 @@
 import type { Item } from '../../lib/catalog';
 import { cmToMeters } from '../../lib/tour-placement';
-
-/**
- * Temporary hex color for item placeholders until slice 4 introduces
- * style-driven palette lookups. Three.js color parser rejects oklch().
- */
-const ITEM_PLACEHOLDER_HEX = '#8a7d6a';
+import { ITEM_PLACEHOLDER_HEX } from '../../lib/tour-colors';
 
 interface PlacedItemMeshProps {
   item: Item;

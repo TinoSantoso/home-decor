@@ -1,6 +1,5 @@
 import type { ThreeEvent } from '@react-three/fiber';
 import { useFloorPlan } from '../../stores/floor-plan';
-import { clickToZoneCoords } from '../../lib/tour-placement';
 import type { ZoneTransform } from '../../lib/tour-transform';
 
 /**
@@ -23,7 +22,7 @@ export function useZoneClickHandler() {
   return function handleZoneClick(
     e: ThreeEvent<MouseEvent>,
     zoneId: string,
-    transform: ZoneTransform,
+    _transform: ZoneTransform,
   ) {
     e.stopPropagation();
 
@@ -31,11 +30,7 @@ export function useZoneClickHandler() {
 
     if (placementMode && pendingPlacementItemId) {
       const worldHit = e.point.toArray() as [number, number, number];
-      const relPos = clickToZoneCoords(worldHit, transform);
       placeItemAt(zoneId, pendingPlacementItemId, worldHit);
-      // Use relative coords for zone-relative storage; world coords for world mesh.
-      // We store worldHit so PlacedItemMesh can render at the exact click position.
-      void relPos; // relPos available for future zone-relative storage
       setPlacementMode(false);
       setPendingPlacementItemId(null);
     } else {
