@@ -1,21 +1,9 @@
 /**
- * Asset URL resolution helper.
- *
- * Resolves a catalog `asset3dUrl` value to a fetch-ready URL:
- *   - null/undefined/empty → null (no asset)
- *   - Already absolute (http/https) or root-relative (/) → return as-is
- *   - Bare key (e.g. "furniture/sofa-001/model.glb"):
- *       • R2_PUBLIC_BASE_URL set → join to form full CDN URL
- *       • R2_PUBLIC_BASE_URL empty → return as root-relative local path (dev mode)
- *
- * Kept as a pure function so tests can stub process.env without side effects.
- *
- * Static-asset path decision: the project has no pre-existing `public/` dir.
- * However, Vite automatically serves files in `public/` at the root URL path,
- * which makes it the simplest convention for assets referenced from runtime
- * data like catalog.seed.json (which cannot use `?url` imports). The Duck GLB
- * is therefore committed to both `src/data/assets/samples/` (as a test fixture)
- * and `public/assets/samples/` (for Vite static serving at `/assets/samples/Duck.glb`).
+ * Resolves a catalog `asset3dUrl` to a fetch-ready URL.
+ *   - null/undefined/empty → null
+ *   - http/https/root-relative → returned as-is
+ *   - bare key + R2_PUBLIC_BASE_URL set → joined into a full CDN URL
+ *   - bare key + R2_PUBLIC_BASE_URL empty → root-relative path (dev mode)
  */
 
 export function resolveAssetUrl(asset3dUrl: string | null | undefined): string | null {
