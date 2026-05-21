@@ -44,6 +44,7 @@ export function ZoneDetailPanel() {
   const removePlacedItem = useFloorPlan((s) => s.removePlacedItem);
   const budgetTier = useFloorPlan((s) => s.budgetTier);
   const styleTag = useFloorPlan((s) => s.styleTag);
+  const climateZone = useFloorPlan((s) => s.climateZone);
 
   const [tab, setTab] = useState<Tab>('properties');
   const [catalog, setCatalog] = useState<Item[] | null>(null);
@@ -61,9 +62,10 @@ export function ZoneDetailPanel() {
       zoneIndoor: isIndoor(zone.type),
       budgetTier,
       styleTag,
+      climateZone,
     });
     return topNPerCategory(ranked, 4);
-  }, [catalog, zone, budgetTier, styleTag]);
+  }, [catalog, zone, budgetTier, styleTag, climateZone]);
 
   const placedDetail = useMemo(() => {
     if (!catalog) return placedItems.map((p) => ({ record: p, item: null as Item | null }));

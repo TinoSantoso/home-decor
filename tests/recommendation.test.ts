@@ -38,6 +38,7 @@ describe('rankRecommendations', () => {
       zoneIndoor: true,
       budgetTier: 'standar',
       styleTag: null,
+      climateZone: 'tropical_indonesia',
     });
     expect(out.map((r) => r.item.id)).toEqual(['b']);
   });
@@ -59,6 +60,7 @@ describe('rankRecommendations', () => {
       zoneIndoor: false,
       budgetTier: 'standar',
       styleTag: null,
+      climateZone: 'tropical_indonesia',
     });
     expect(out.map((r) => r.item.id)).toEqual(['outdoor']);
   });
@@ -71,6 +73,7 @@ describe('rankRecommendations', () => {
       zoneIndoor: true,
       budgetTier: 'standar',
       styleTag: null,
+      climateZone: 'tropical_indonesia',
     });
     expect(out.find((r) => r.item.id === 'sofa')?.priority).toBe('esensial');
     expect(out.find((r) => r.item.id === 'rug')?.priority).not.toBe('esensial');
@@ -92,6 +95,7 @@ describe('rankRecommendations', () => {
       zoneIndoor: true,
       budgetTier: 'standar',
       styleTag: 'japandi',
+      climateZone: 'tropical_indonesia',
     });
     const matchScore = out.find((r) => r.item.id === 'match')!.score;
     const offScore = out.find((r) => r.item.id === 'off')!.score;
@@ -119,6 +123,7 @@ describe('rankRecommendations', () => {
       zoneIndoor: true,
       budgetTier: 'standar',
       styleTag: 'japandi',
+      climateZone: 'tropical_indonesia',
     });
     expect(out[0]?.item.id).toBe('ess');
   });
@@ -134,10 +139,125 @@ describe('rankRecommendations', () => {
       zoneIndoor: true,
       budgetTier: 'standar',
       styleTag: null,
+      climateZone: 'tropical_indonesia',
     });
     for (const rec of out) {
       expect(rec.reasons).toContain('tier_fit');
     }
+  });
+
+  // ── Climate-aware ranking (Phase 3 slice 2) ────────────────────────────────
+
+  it('outdoor item with matching climate tags outranks identical outdoor item with no tags', () => {
+    const baseOutdoor = {
+      outdoorOk: true,
+      indoorOk: false,
+      zoneTags: ['terrace' as const],
+      durabilityScore: 3,
+      maintenanceScore: 3,
+    };
+    const withTags = makeItem({ id: 'tagged', climateTags: ['tropical', 'humid'], ...baseOutdoor });
+    const noTags = makeItem({ id: 'untagged', climateTags: [], ...baseOutdoor });
+    const out = rankRecommendations([withTags, noTags], {
+      zoneType: 'terrace',
+      zoneIndoor: false,
+      budgetTier: 'standar',
+      styleTag: null,
+      climateZone: 'tropical_indonesia',
+    });
+    const taggedScore = out.find((r) => r.item.id === 'tagged')!.score;
+    const untaggedScore = out.find((r) => r.item.id === 'untagged')!.score;
+    expect(taggedScore).toBeGreaterThan(untaggedScore);
+  });
+
+  it('outdoor item with mismatched tags scores below an item with matching tags', () => {
+    const baseOutdoor = {
+      outdoorOk: true,
+      indoorOk: false,
+      zoneTags: ['terrace' as const],
+      durabilityScore: 3,
+      maintenanceScore: 3,
+    };
+    // 'uv_resistant' is one of the 5 expected tags for tropical_indonesia.
+    // 2 matching tags score higher than 1 matching tag.
+    const goodMatch = makeItem({
+      id: 'good',
+      climateTags: ['tropical', 'humid'],
+      ...baseOutdoor,
+    });
+    const poorMatch = makeItem({
+      id: 'poor',
+      climateTags: ['uv_resistant'],
+      ...baseOutdoor,
+    });
+    const out = rankRecommendations([goodMatch, poorMatch], {
+      zoneType: 'terrace',
+      zoneIndoor: false,
+      budgetTier: 'standar',
+      styleTag: null,
+      climateZone: 'tropical_indonesia',
+    });
+    const goodScore = out.find((r) => r.item.id === 'good')!.score;
+    const poorScore = out.find((r) => r.item.id === 'poor')!.score;
+    expect(goodScore).toBeGreaterThan(poorScore);
+  });
+
+  it('climate_fit reason fires for outdoor items with tags overlapping the expected set', () => {
+    const item = makeItem({
+      id: 'out',
+      outdoorOk: true,
+      indoorOk: false,
+      climateTags: ['tropical', 'humid'],
+      zoneTags: ['terrace'],
+    });
+    const out = rankRecommendations([item], {
+      zoneType: 'terrace',
+      zoneIndoor: false,
+      budgetTier: 'standar',
+      styleTag: null,
+      climateZone: 'tropical_indonesia',
+    });
+    expect(out[0]?.reasons).toContain('climate_fit');
+  });
+
+  it('climate_fit reason does NOT fire for outdoor item with empty climateTags', () => {
+    const item = makeItem({
+      id: 'out',
+      outdoorOk: true,
+      indoorOk: false,
+      climateTags: [],
+      zoneTags: ['terrace'],
+    });
+    const out = rankRecommendations([item], {
+      zoneType: 'terrace',
+      zoneIndoor: false,
+      budgetTier: 'standar',
+      styleTag: null,
+      climateZone: 'tropical_indonesia',
+    });
+    expect(out[0]?.reasons).not.toContain('climate_fit');
+  });
+
+  it('indoor anti_mold-tagged item outranks identical indoor item without the tag', () => {
+    const baseIndoor = {
+      outdoorOk: false,
+      indoorOk: true,
+      zoneTags: ['living_room' as const],
+      durabilityScore: 3,
+      maintenanceScore: 3,
+    };
+    const withMold = makeItem({ id: 'mold', climateTags: ['anti_mold'], ...baseIndoor });
+    const noMold = makeItem({ id: 'nomold', climateTags: [], ...baseIndoor });
+    const out = rankRecommendations([withMold, noMold], {
+      zoneType: 'living_room',
+      zoneIndoor: true,
+      budgetTier: 'standar',
+      styleTag: null,
+      climateZone: 'tropical_indonesia',
+    });
+    const moldScore = out.find((r) => r.item.id === 'mold')!.score;
+    const noMoldScore = out.find((r) => r.item.id === 'nomold')!.score;
+    expect(moldScore).toBeGreaterThan(noMoldScore);
   });
 });
 
