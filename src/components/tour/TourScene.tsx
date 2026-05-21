@@ -1,26 +1,62 @@
-import { Suspense, useMemo } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Grid } from '@react-three/drei';
+import { Grid } from '@react-three/drei';
 import { useFloorPlan } from '../../stores/floor-plan';
 import {
   DEFAULT_BOX_HEIGHT_M,
   computeGroundSize,
   zoneToTransform,
 } from '../../lib/tour-transform';
-import { TOUR_GROUND_COLOR, TOUR_ZONE_COLORS_3D } from '../../lib/tour-colors';
+import { TOUR_GROUND_COLOR } from '../../lib/tour-colors';
+import { getZoneColor } from '../../lib/tour-materials';
+import { loadCatalog } from '../../lib/catalog';
+import type { Item } from '../../lib/catalog';
+import type { TourSnapshot } from '../../lib/tour-snapshot';
+import { TourControls } from './TourControls';
+import { TourModeToggle } from './TourModeToggle';
+import { ZoneMesh } from './ZoneMesh';
+import { PlacedItemMesh } from './PlacedItemMesh';
+import { ItemPlacementPanel } from './ItemPlacementPanel';
+import { useZoneClickHandler } from './useZoneClickHandler';
+
+interface TourSceneProps {
+  /**
+   * Optional read-only snapshot of floor-plan state. When provided the
+   * scene renders from the snapshot instead of pulling from the live
+   * store; interactive overlays (TourModeToggle, ItemPlacementPanel)
+   * are also suppressed. Used by BeforeAfterCompare (Phase 2 slice 5).
+   * Default `undefined` = live store behaviour (Phase 2 slices 1-4).
+   */
+  snapshot?: TourSnapshot;
+}
 
 /**
- * Phase 2 slice 1: orbital 3D view of the floor plan with each zone
- * rendered as a translucent box. No items, materials, or first-person
- * walk yet — those are upcoming slices.
- *
- * Rendered only inside an `ssr: false` route. Canvas mounts a WebGL
- * context, so SSR would throw.
+ * Phase 2 slice 5: optionally renders from a static snapshot for the
+ * Before/After wipe-slider compare. Zone boxes are still rendered by
+ * ZoneMesh; placed items by PlacedItemMesh.
  */
-export default function TourScene() {
-  const zones = useFloorPlan((s) => s.zones);
-  const selectedZoneId = useFloorPlan((s) => s.selectedZoneId);
+export default function TourScene({ snapshot }: TourSceneProps) {
+  // Live-store hooks — must always be called (Rules of Hooks). When a
+  // snapshot is provided we ignore the values and read from the
+  // snapshot instead.
+  const liveZones = useFloorPlan((s) => s.zones);
+  const liveSelectedZoneId = useFloorPlan((s) => s.selectedZoneId);
+  const livePlacedItems = useFloorPlan((s) => s.placedItems);
+  const liveStyleTag = useFloorPlan((s) => s.styleTag);
+
   const selectZone = useFloorPlan((s) => s.selectZone);
+  const tourMode = useFloorPlan((s) => s.tourMode);
+
+  const zones = snapshot ? snapshot.zones : liveZones;
+  const selectedZoneId = snapshot ? snapshot.selectedZoneId : liveSelectedZoneId;
+  const placedItems = snapshot ? snapshot.placedItems : livePlacedItems;
+  const styleTag = snapshot ? snapshot.styleTag : liveStyleTag;
+
+  const [catalog, setCatalog] = useState<Item[]>([]);
+
+  useEffect(() => {
+    loadCatalog().then(setCatalog).catch(() => undefined);
+  }, []);
 
   const groundSize = useMemo(() => computeGroundSize(zones), [zones]);
   const transforms = useMemo(() => zones.map((z) => zoneToTransform(z)), [zones]);
@@ -30,8 +66,11 @@ export default function TourScene() {
     groundSize / 2,
   ];
 
+  const handleZoneClick = useZoneClickHandler();
+  const isSnapshot = snapshot !== undefined;
+
   return (
-    <div className="h-[700px] w-full overflow-hidden rounded-[var(--radius)] border border-[color:var(--color-border)] bg-[oklch(95%_0.005_95)]">
+    <div className="relative h-[700px] w-full overflow-hidden rounded-[var(--radius)] border border-[color:var(--color-border)] bg-[oklch(95%_0.005_95)]">
       <Canvas
         camera={{
           position: [groundSize * 0.9, groundSize * 0.8, groundSize * 1.2],
@@ -39,7 +78,9 @@ export default function TourScene() {
           near: 0.1,
           far: groundSize * 5,
         }}
-        onPointerMissed={() => selectZone(null)}
+        onPointerMissed={() => {
+          if (!isSnapshot) selectZone(null);
+        }}
       >
         <Suspense fallback={null}>
           <ambientLight intensity={0.7} />
@@ -58,13 +99,12 @@ export default function TourScene() {
             <meshStandardMaterial color={TOUR_GROUND_COLOR} />
           </mesh>
 
-          {/* 1 m grid overlay for scale */}
+          {/* 1 m grid overlay */}
           <Grid
             position={[groundSize / 2, 0.01, groundSize / 2]}
             args={[groundSize, groundSize]}
             cellSize={1}
             cellThickness={0.5}
-            // Three.js color parser doesn't accept oklch() — use hex.
             cellColor="#ccc8c0"
             sectionSize={5}
             sectionThickness={1}
@@ -77,38 +117,57 @@ export default function TourScene() {
           {/* Zone boxes */}
           {transforms.map((t, idx) => {
             const zone = zones[idx]!;
-            const color = TOUR_ZONE_COLORS_3D[zone.type];
-            const isSelected = zone.id === selectedZoneId;
+            const color = getZoneColor(zone.type, styleTag);
             return (
-              <mesh
+              <ZoneMesh
                 key={t.zoneId}
-                position={t.position}
-                scale={t.scale}
+                transform={t}
+                color={color}
+                isSelected={zone.id === selectedZoneId}
                 onClick={(e) => {
-                  e.stopPropagation();
-                  selectZone(zone.id);
+                  if (isSnapshot) {
+                    e.stopPropagation();
+                    return;
+                  }
+                  handleZoneClick(e, zone.id, t);
                 }}
-              >
-                <boxGeometry args={[1, 1, 1]} />
-                <meshStandardMaterial
-                  color={color}
-                  transparent
-                  opacity={isSelected ? 0.92 : 0.7}
-                />
-              </mesh>
+              />
             );
           })}
 
-          <OrbitControls
+          {/* Placed item meshes */}
+          {placedItems.map((p) => {
+            if (!p.position3d) return null;
+            const item = catalog.find((c) => c.id === p.itemId);
+            if (!item) return null;
+            return (
+              <PlacedItemMesh
+                key={p.id}
+                item={item}
+                position={p.position3d}
+                styleTag={styleTag}
+              />
+            );
+          })}
+
+          <TourControls
+            mode={tourMode}
             target={center}
-            makeDefault
-            enablePan
             minDistance={2}
             maxDistance={groundSize * 4}
-            maxPolarAngle={Math.PI / 2 - 0.05}
           />
         </Suspense>
       </Canvas>
+
+      {/* Overlays — outside Canvas, plain DOM. Suppressed in snapshot
+          mode because both BeforeAfterCompare instances share the same
+          overlay space and the snapshot view is read-only. */}
+      {!isSnapshot && (
+        <>
+          <ItemPlacementPanel />
+          <TourModeToggle />
+        </>
+      )}
     </div>
   );
 }

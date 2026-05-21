@@ -82,7 +82,28 @@
     "backToEditor": "Back to Editor",
     "loadingScene": "Loading 3D scene…",
     "noZones": "No zones yet. Add zones in the editor to see the 3D tour.",
-    "controlsHint": "Left-drag to orbit · right-drag to pan · scroll to zoom · click a zone to select"
+    "controlsHint": "Left-drag to orbit · right-drag to pan · scroll to zoom · click a zone to select",
+    "modeWalk": "Walk",
+    "modeOrbit": "Orbit",
+    "modeBadgeWalk": "Walk Mode",
+    "modeBadgeOrbit": "Orbit Mode",
+    "switchToOrbit": "Switch to orbit mode",
+    "switchToWalk": "Switch to walk mode",
+    "compare": "Compare",
+    "compareExit": "Exit compare mode",
+    "compareBefore": "Before",
+    "compareAfter": "After",
+    "compareSliderLabel": "Drag to compare before and after",
+    "placement": {
+      "title": "Place Item",
+      "selectZone": "Select zone",
+      "selectItem": "Select item",
+      "activateMode": "Activate placement mode",
+      "deactivateMode": "Deactivate placement mode",
+      "modeActive": "Placement mode active — click a zone to place the item",
+      "noZones": "No zones yet.",
+      "noCatalog": "Loading catalog…"
+    }
   },
   "estimate": {
     "title": "Cost Estimate",

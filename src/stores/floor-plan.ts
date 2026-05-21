@@ -24,6 +24,12 @@ interface FloorPlanState {
   placedItems: PlacedItemRecord[];
   /** Whether drag/resize snaps to the 0.25 m grid. */
   snapEnabled: boolean;
+  /** Camera mode for the 3D tour: orbital overview or first-person walk. */
+  tourMode: 'orbit' | 'walk';
+  /** Whether placement mode is active in the 3D tour — next zone click places the selected item. */
+  placementMode: boolean;
+  /** The catalog item id staged for placement when placementMode is true. */
+  pendingPlacementItemId: string | null;
 
   loadProject: (record: ProjectRecord) => void;
   addZone: (type: ZoneType, name: string) => string;
@@ -45,6 +51,14 @@ interface FloorPlanState {
    * zone does not exist. Locale controls the suffix ("(salinan)" vs "(copy)").
    */
   duplicateZone: (id: string, locale?: 'id' | 'en') => string | null;
+  setTourMode: (mode: 'orbit' | 'walk') => void;
+  setPlacementMode: (active: boolean) => void;
+  setPendingPlacementItemId: (itemId: string | null) => void;
+  /**
+   * Place a catalog item at a 3D position inside a zone. Appends a new
+   * PlacedItemRecord with position3d set. Returns the new record id.
+   */
+  placeItemAt: (zoneId: string, itemId: string, pos: [number, number, number]) => string;
   reset: () => void;
   toProjectRecord: () => ProjectRecord | null;
 }
@@ -65,6 +79,9 @@ const INITIAL: Pick<
   | 'selectedZoneId'
   | 'placedItems'
   | 'snapEnabled'
+  | 'tourMode'
+  | 'placementMode'
+  | 'pendingPlacementItemId'
 > = {
   projectId: null,
   projectName: '',
@@ -78,6 +95,9 @@ const INITIAL: Pick<
   selectedZoneId: null,
   placedItems: [],
   snapEnabled: true,
+  tourMode: 'orbit',
+  placementMode: false,
+  pendingPlacementItemId: null,
 };
 
 export const useFloorPlan = create<FloorPlanState>((set, get) => ({
@@ -171,6 +191,26 @@ export const useFloorPlan = create<FloorPlanState>((set, get) => ({
     };
     set((s) => ({ zones: [...s.zones, dup], selectedZoneId: newId }));
     return newId;
+  },
+
+  setTourMode: (mode) => set({ tourMode: mode }),
+
+  setPlacementMode: (active) => set({ placementMode: active }),
+
+  setPendingPlacementItemId: (itemId) => set({ pendingPlacementItemId: itemId }),
+
+  placeItemAt: (zoneId, itemId, pos) => {
+    const id = nanoid(10);
+    const record: PlacedItemRecord = {
+      id,
+      zoneId,
+      itemId,
+      quantity: 1,
+      notes: '',
+      position3d: pos,
+    };
+    set((s) => ({ placedItems: [...s.placedItems, record] }));
+    return id;
   },
 
   reset: () => set(INITIAL),
