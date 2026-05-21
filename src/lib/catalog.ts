@@ -63,6 +63,8 @@ export interface Item {
   popularityScore?: number;
   priceIdr: Record<BudgetTier, number>;
   thumbnailHint: string;
+  /** Optional URL or bare R2 key for a real GLB mesh rendered in the tour scene. */
+  asset3dUrl?: string;
   alternatives: string[];
 }
 

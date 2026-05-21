@@ -14,6 +14,7 @@
     "maintenanceScore": 2,
     "priceIdr": { "hemat": 3500000, "standar": 7500000, "premium": 15000000, "mewah": 28000000 },
     "thumbnailHint": "oklch(88% 0.03 70)",
+    "asset3dUrl": "/assets/samples/Duck.glb",
     "alternatives": ["sofa-l-tropical"]
   },
   {
