@@ -10,6 +10,7 @@ import { formatIDR } from '../lib/currency';
 import { zoneAreaM2 } from '../lib/zones';
 import { loadCatalog, type Item } from '../lib/catalog';
 import { toPlacedItemInputs } from '../lib/placed-items';
+import { ExportPdfButton } from '../components/estimate/ExportPdfButton';
 
 export const Route = createFileRoute('/projects/$projectId/estimate')({
   ssr: false,
@@ -148,6 +149,15 @@ function EstimatePage() {
             {t('estimate.subtitle')}
           </p>
         </div>
+        <ExportPdfButton
+          estimate={estimate}
+          zones={zones}
+          projectName={projectName ?? ''}
+          budgetTier={budgetTier}
+          contingencyPct={contingencyPct}
+          taxEnabled={taxEnabled}
+          localeTag={localeTag}
+        />
       </header>
 
       {zones.length === 0 ? (

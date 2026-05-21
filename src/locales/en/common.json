@@ -105,6 +105,15 @@
       "noCatalog": "Loading catalog…"
     }
   },
+  "pdf": {
+    "export": "Download PDF",
+    "generating": "Generating PDF…",
+    "title": "Project Plan",
+    "generatedAt": "Generated on",
+    "tier": "Budget tier",
+    "zoneTotal": "Total per zone",
+    "categoryTotal": "Total per category"
+  },
   "estimate": {
     "title": "Cost Estimate",
     "subtitle": "End-to-end estimate based on zones, finishes, and budget tier.",
