@@ -13,9 +13,10 @@
  *   maintenance ease                        10
  */
 
-import type { Item, ItemCategory, StyleTag } from './catalog';
+import type { ClimateTag, Item, ItemCategory, StyleTag } from './catalog';
 import type { BudgetTier } from './cost-engine';
 import type { ZoneType } from './zones';
+import { type ClimateZone, expectedClimateTags, climateMatchScore } from './climate';
 
 export type Priority = 'esensial' | 'direkomendasikan' | 'opsional';
 
@@ -32,6 +33,7 @@ export interface RecommendationInput {
   zoneIndoor: boolean;
   budgetTier: BudgetTier;
   styleTag: StyleTag | null;
+  climateZone: ClimateZone;
 }
 
 export interface ScoredRecommendation {
@@ -94,10 +96,17 @@ function styleScore(item: Item, styleTag: StyleTag | null): number {
   return item.styleTags.includes(styleTag) ? 1 : 0.25;
 }
 
-function climateScore(item: Item, indoor: boolean): number {
-  if (indoor) return item.indoorOk ? 1 : 0;
+function climateScore(item: Item, indoor: boolean, expected: ReadonlySet<ClimateTag>): number {
+  if (indoor) {
+    if (!item.indoorOk) return 0;
+    // Indoor items: use climateMatchScore as a soft boost.
+    // Items with matching tags (e.g. anti_mold for tropical zones) rank higher
+    // than items with no tags. No-tags neutral is 0.5; tag overlap raises it
+    // toward 1. Unknown zone fallback (empty expected) is 0.6 for all items.
+    return climateMatchScore(item.climateTags, expected);
+  }
   if (!item.outdoorOk) return 0;
-  return item.climateTags.length > 0 ? 1 : 0.6;
+  return climateMatchScore(item.climateTags, expected);
 }
 
 function priceFitScore(item: Item, tier: BudgetTier, medians: Map<string, number>): number {
@@ -126,10 +135,21 @@ function collectReasons(
   input: RecommendationInput,
   priceFit: number,
   isEssential: boolean,
+  expected: ReadonlySet<ClimateTag>,
 ): ReasonTag[] {
   const reasons: ReasonTag[] = [];
   if (input.styleTag && item.styleTags.includes(input.styleTag)) reasons.push('style_match');
-  if (!input.zoneIndoor && item.outdoorOk && item.climateTags.length > 0) reasons.push('climate_fit');
+  // climate_fit fires only when the item has tags that actually overlap the
+  // expected set — not merely "has any tags" and not for empty-expected fallback.
+  if (
+    !input.zoneIndoor &&
+    item.outdoorOk &&
+    item.climateTags.length > 0 &&
+    expected.size > 0 &&
+    item.climateTags.some((t) => expected.has(t))
+  ) {
+    reasons.push('climate_fit');
+  }
   if (item.durabilityScore >= 4) reasons.push('durable');
   if (item.maintenanceScore <= 2) reasons.push('low_maintenance');
   if (priceFit >= 0.8) reasons.push('tier_fit');
@@ -143,6 +163,8 @@ export function rankRecommendations(
 ): ScoredRecommendation[] {
   const medians = computeMedians(catalog);
   const essentials = ESSENTIAL_CATEGORIES_BY_ZONE[input.zoneType] ?? [];
+  // Compute expected climate tags once per call (not per item) for efficiency.
+  const expected = expectedClimateTags(input.climateZone);
 
   const candidates = catalog.filter((item) => {
     if (input.zoneIndoor && !item.indoorOk) return false;
@@ -154,12 +176,12 @@ export function rankRecommendations(
   });
 
   const scored: ScoredRecommendation[] = candidates.map((item) => {
-    const style = styleScore(item, input.styleTag);                  // 0–1
-    const climate = climateScore(item, input.zoneIndoor);             // 0–1
-    const durability = durabilityFactor(item);                        // 0–1
-    const priceFit = priceFitScore(item, input.budgetTier, medians);  // 0–1
-    const maintenance = maintenanceFactor(item);                      // 0–1
-    const popularity = popularityFactor(item);                        // 0–1
+    const style = styleScore(item, input.styleTag);                       // 0–1
+    const climate = climateScore(item, input.zoneIndoor, expected);       // 0–1
+    const durability = durabilityFactor(item);                            // 0–1
+    const priceFit = priceFitScore(item, input.budgetTier, medians);      // 0–1
+    const maintenance = maintenanceFactor(item);                          // 0–1
+    const popularity = popularityFactor(item);                            // 0–1
 
     const score =
       style * 40 +
@@ -179,7 +201,7 @@ export function rankRecommendations(
       item,
       score: Math.round(score * 10) / 10,
       priority,
-      reasons: collectReasons(item, input, priceFit, isEssential),
+      reasons: collectReasons(item, input, priceFit, isEssential, expected),
     };
   });
 
