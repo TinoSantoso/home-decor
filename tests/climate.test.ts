@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { ClimateTag } from '../src/lib/catalog';
 import { expectedClimateTags, climateMatchScore } from '../src/lib/climate';
 
 describe('expectedClimateTags', () => {
@@ -51,5 +52,23 @@ describe('climateMatchScore', () => {
 
   it('returns 0.6 for empty item tags when expected set is also empty', () => {
     expect(climateMatchScore([], empty)).toBe(0.6);
+  });
+
+  it('returns 1.0 when item tags fully cover the expected set', () => {
+    // Pins the Math.min(1, …) ceiling: a future "simplification" that drops
+    // the clamp would silently break overflow behavior on extended tag sets.
+    const score = climateMatchScore(
+      ['tropical', 'humid', 'anti_mold', 'monsoon', 'uv_resistant'],
+      tropical,
+    );
+    expect(score).toBe(1);
+  });
+
+  it('returns 0.5 when item tags exist but none overlap the expected set', () => {
+    // Zero overlap collapses to the same neutral fallback as no-tags-at-all.
+    // 'arctic' isn't a real ClimateTag — cast through unknown to test the
+    // zero-overlap branch since tropical_indonesia expects every valid tag.
+    const arcticTag = 'arctic' as unknown as ClimateTag;
+    expect(climateMatchScore([arcticTag], tropical)).toBe(0.5);
   });
 });

@@ -170,7 +170,7 @@ describe('rankRecommendations', () => {
     expect(taggedScore).toBeGreaterThan(untaggedScore);
   });
 
-  it('outdoor item with mismatched tags scores below an item with matching tags', () => {
+  it('outdoor item with more matching tags scores above item with fewer matches', () => {
     const baseOutdoor = {
       outdoorOk: true,
       indoorOk: false,
@@ -178,8 +178,8 @@ describe('rankRecommendations', () => {
       durabilityScore: 3,
       maintenanceScore: 3,
     };
-    // 'uv_resistant' is one of the 5 expected tags for tropical_indonesia.
-    // 2 matching tags score higher than 1 matching tag.
+    // Both items have tags that overlap tropical_indonesia's expected set;
+    // the one with more overlap should rank higher.
     const goodMatch = makeItem({
       id: 'good',
       climateTags: ['tropical', 'humid'],
@@ -200,6 +200,41 @@ describe('rankRecommendations', () => {
     const goodScore = out.find((r) => r.item.id === 'good')!.score;
     const poorScore = out.find((r) => r.item.id === 'poor')!.score;
     expect(goodScore).toBeGreaterThan(poorScore);
+  });
+
+  it('outdoor item with non-matching tags scores at or below item with empty tags', () => {
+    const baseOutdoor = {
+      outdoorOk: true,
+      indoorOk: false,
+      zoneTags: ['terrace' as const],
+      durabilityScore: 3,
+      maintenanceScore: 3,
+    };
+    // tropical_indonesia expects every valid ClimateTag, so we need to cast
+    // a synthetic non-matching tag to exercise the zero-overlap branch.
+    const arcticTag = 'arctic' as unknown as Item['climateTags'][number];
+    const mismatched = makeItem({
+      id: 'mismatched',
+      climateTags: [arcticTag],
+      ...baseOutdoor,
+    });
+    const empty = makeItem({
+      id: 'empty',
+      climateTags: [],
+      ...baseOutdoor,
+    });
+    const out = rankRecommendations([mismatched, empty], {
+      zoneType: 'terrace',
+      zoneIndoor: false,
+      budgetTier: 'standar',
+      styleTag: null,
+      climateZone: 'tropical_indonesia',
+    });
+    const mismatchedScore = out.find((r) => r.item.id === 'mismatched')!.score;
+    const emptyScore = out.find((r) => r.item.id === 'empty')!.score;
+    // Zero-overlap and empty-tags both fall to 0.5 in the climate formula,
+    // so the mismatched item must not outrank the empty item on climate alone.
+    expect(mismatchedScore).toBeLessThanOrEqual(emptyScore);
   });
 
   it('climate_fit reason fires for outdoor items with tags overlapping the expected set', () => {
