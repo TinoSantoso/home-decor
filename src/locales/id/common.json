@@ -105,6 +105,19 @@
       "noCatalog": "Memuat katalog…"
     }
   },
+  "pdf": {
+    "export": "Unduh PDF",
+    "generating": "Membuat PDF…",
+    "title": "Rencana Proyek",
+    "generatedAt": "Dibuat pada",
+    "tier": "Anggaran",
+    "zoneTotal": "Total per zona",
+    "categoryTotal": "Total per kategori",
+    "zoneColumnName": "Zona",
+    "zoneColumnMeta": "Tipe / m²",
+    "categoryColumnName": "Kategori",
+    "taxLine": "PPN 11%"
+  },
   "estimate": {
     "title": "Estimasi Biaya",
     "subtitle": "Perkiraan menyeluruh berdasarkan zona, finishing, dan tingkat anggaran.",
