@@ -29,6 +29,10 @@ interface Props {
     categoryTotal: string;
     assumptions: string;
     assumptionsBody: string;
+    zoneColumnName: string;
+    zoneColumnMeta: string;
+    categoryColumnName: string;
+    taxLine: string;
   };
 }
 
@@ -178,7 +182,7 @@ export function EstimatePdfDocument({ doc, labels }: Props) {
           <Text style={s.assumptionsBannerText}>
             {labels.tier}: {assumptions.tier} · {tierPct}%{' '}
             {labels.contingency.toLowerCase()}
-            {assumptions.taxEnabled ? ' · PPN 11%' : ''}
+            {assumptions.taxEnabled ? ` · ${labels.taxLine}` : ''}
           </Text>
         </View>
 
@@ -225,8 +229,8 @@ export function EstimatePdfDocument({ doc, labels }: Props) {
             <Text style={s.sectionHeading}>{labels.zoneTotal}</Text>
             <View style={s.table}>
               <View style={s.tableHeader}>
-                <Text style={[s.colName, s.colHeaderText]}>Zona</Text>
-                <Text style={[s.colMeta, s.colHeaderText]}>Tipe / m²</Text>
+                <Text style={[s.colName, s.colHeaderText]}>{labels.zoneColumnName}</Text>
+                <Text style={[s.colMeta, s.colHeaderText]}>{labels.zoneColumnMeta}</Text>
                 <Text style={[s.colAmount, s.colHeaderText]}>Total</Text>
               </View>
               {zones.map((zone, idx) => (
@@ -250,7 +254,7 @@ export function EstimatePdfDocument({ doc, labels }: Props) {
             <Text style={s.sectionHeading}>{labels.categoryTotal}</Text>
             <View style={s.table}>
               <View style={s.tableHeader}>
-                <Text style={[s.colName, s.colHeaderText]}>Kategori</Text>
+                <Text style={[s.colName, s.colHeaderText]}>{labels.categoryColumnName}</Text>
                 <Text style={[s.colMeta, s.colHeaderText]}>
                   {labels.materials} / {labels.labor}
                 </Text>

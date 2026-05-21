@@ -79,6 +79,10 @@ export function ExportPdfButton({
         categoryTotal: t('pdf.categoryTotal'),
         assumptions: t('estimate.assumptions'),
         assumptionsBody: t('estimate.assumptionsBody'),
+        zoneColumnName: t('pdf.zoneColumnName'),
+        zoneColumnMeta: t('pdf.zoneColumnMeta'),
+        categoryColumnName: t('pdf.categoryColumnName'),
+        taxLine: t('pdf.taxLine'),
       };
 
       const blob = await pdf(

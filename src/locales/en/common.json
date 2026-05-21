@@ -112,7 +112,11 @@
     "generatedAt": "Generated on",
     "tier": "Budget tier",
     "zoneTotal": "Total per zone",
-    "categoryTotal": "Total per category"
+    "categoryTotal": "Total per category",
+    "zoneColumnName": "Zone",
+    "zoneColumnMeta": "Type / m²",
+    "categoryColumnName": "Category",
+    "taxLine": "VAT 11%"
   },
   "estimate": {
     "title": "Cost Estimate",

@@ -112,7 +112,11 @@
     "generatedAt": "Dibuat pada",
     "tier": "Anggaran",
     "zoneTotal": "Total per zona",
-    "categoryTotal": "Total per kategori"
+    "categoryTotal": "Total per kategori",
+    "zoneColumnName": "Zona",
+    "zoneColumnMeta": "Tipe / m²",
+    "categoryColumnName": "Kategori",
+    "taxLine": "PPN 11%"
   },
   "estimate": {
     "title": "Estimasi Biaya",
