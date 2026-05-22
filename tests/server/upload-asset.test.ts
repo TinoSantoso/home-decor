@@ -30,7 +30,11 @@ vi.mock('@aws-sdk/client-s3', () => {
 });
 
 // Import AFTER vi.mock so the mock is in place.
-import { uploadAsset } from '../../src/server/upload-asset';
+import {
+  uploadAsset,
+  uploadAssetFn,
+  uploadAssetFromBase64,
+} from '../../src/server/upload-asset';
 
 describe('uploadAsset', () => {
   beforeEach(() => {
@@ -112,5 +116,54 @@ describe('uploadAsset', () => {
     await expect(
       uploadAsset({ key: '', body, contentType: 'model/gltf-binary' }),
     ).rejects.toThrow();
+  });
+});
+
+describe('uploadAssetFromBase64 (server-fn wrapper logic)', () => {
+  beforeEach(() => {
+    vi.stubEnv('R2_ACCOUNT_ID', 'test-account-id');
+    vi.stubEnv('R2_ACCESS_KEY_ID', 'test-access-key');
+    vi.stubEnv('R2_SECRET_ACCESS_KEY', 'test-secret-key');
+    vi.stubEnv('R2_BUCKET_ASSETS', 'test-bucket');
+    vi.stubEnv('R2_PUBLIC_BASE_URL', 'https://assets.example.com');
+    mockSend.mockClear();
+    mockSend.mockResolvedValue({});
+    s3ClientCalls.length = 0;
+    putObjectCommandCalls.length = 0;
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('decodes bodyBase64 into bytes and forwards them as the PutObject Body', async () => {
+    // bytes [1, 2, 3, 4, 5] → base64 = "AQIDBAU="
+    const originalBytes = new Uint8Array([1, 2, 3, 4, 5]);
+    const bodyBase64 = Buffer.from(originalBytes).toString('base64');
+
+    const result = await uploadAssetFromBase64({
+      key: 'furniture/sofa/model.glb',
+      contentType: 'model/gltf-binary',
+      bodyBase64,
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      key: 'furniture/sofa/model.glb',
+      url: 'https://assets.example.com/furniture/sofa/model.glb',
+    });
+
+    expect(putObjectCommandCalls).toHaveLength(1);
+    const callArg = putObjectCommandCalls[0] as Record<string, unknown>;
+    expect(callArg['Key']).toBe('furniture/sofa/model.glb');
+    expect(callArg['ContentType']).toBe('model/gltf-binary');
+    const forwardedBody = callArg['Body'] as Uint8Array;
+    expect(Array.from(forwardedBody)).toEqual([1, 2, 3, 4, 5]);
+  });
+});
+
+describe('uploadAssetFn (TanStack server function)', () => {
+  it('is exposed as a POST server function', () => {
+    expect(uploadAssetFn.method).toBe('POST');
   });
 });
