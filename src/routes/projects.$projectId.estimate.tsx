@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFloorPlan } from '../stores/floor-plan';
-import { getProject, saveProject } from '../lib/db/projects';
+import { generateShareToken, getProject, saveProject } from '../lib/db/projects';
 import { debounce } from '../lib/debounce';
 import { calculateCost, type BudgetTier, type CostCategory } from '../lib/cost-engine';
 import { deriveSurfacesFromZones } from '../lib/surfaces';
@@ -42,6 +42,8 @@ function EstimatePage() {
   const setContingencyPct = useFloorPlan((s) => s.setContingencyPct);
   const setTaxEnabled = useFloorPlan((s) => s.setTaxEnabled);
   const [catalog, setCatalog] = useState<Item[]>([]);
+  const [shareCopied, setShareCopied] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
 
   useEffect(() => {
     void loadCatalog().then(setCatalog);
@@ -105,6 +107,23 @@ function EstimatePage() {
     });
   }, [budgetTier, contingencyPct, taxEnabled, zones, placedItems, catalog]);
 
+  const handleCopyShareLink = async () => {
+    try {
+      const token = await generateShareToken(projectId);
+      if (!token) {
+        console.warn('generateShareToken returned null');
+        return;
+      }
+      const url = `${window.location.origin}/projects/${projectId}/share/${token}`;
+      setShareUrl(url);
+      await navigator.clipboard.writeText(url);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 3000);
+    } catch (err) {
+      console.error('Share link copy failed:', err);
+    }
+  };
+
   if (load.kind === 'loading') {
     return (
       <main className="mx-auto max-w-5xl px-6 py-16 text-center text-[color:var(--color-text-muted)]">
@@ -149,15 +168,43 @@ function EstimatePage() {
             {t('estimate.subtitle')}
           </p>
         </div>
-        <ExportPdfButton
-          estimate={estimate}
-          zones={zones}
-          projectName={projectName ?? ''}
-          budgetTier={budgetTier}
-          contingencyPct={contingencyPct}
-          taxEnabled={taxEnabled}
-          localeTag={localeTag}
-        />
+        <div className="flex items-center gap-2">
+          {load.kind === 'ready' && (
+            <button
+              type="button"
+              data-testid="copy-share-link"
+              data-share-url={shareUrl ?? ''}
+              onClick={() => void handleCopyShareLink()}
+              className="flex items-center gap-1.5 rounded-[var(--radius)] border border-[color:var(--color-border)] px-3 py-2 text-sm transition hover:border-[color:var(--color-accent)]"
+            >
+              {shareCopied ? (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  {t('share.copied')}
+                </>
+              ) : (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                  </svg>
+                  {t('share.copyLink')}
+                </>
+              )}
+            </button>
+          )}
+          <ExportPdfButton
+            estimate={estimate}
+            zones={zones}
+            projectName={projectName ?? ''}
+            budgetTier={budgetTier}
+            contingencyPct={contingencyPct}
+            taxEnabled={taxEnabled}
+            localeTag={localeTag}
+          />
+        </div>
       </header>
 
       {zones.length === 0 ? (
