@@ -22,7 +22,17 @@ export interface ProjectRecord {
   climateZone: string;
   styleTag: StyleTag | null;
   /** Public R2 URL of a user-uploaded floor-plan reference image (sketch/photo). */
-  floorPlanImageUrl: string | null;
+  floorPlanImageUrl?: string | null;
+  /**
+   * Nanoid(16) token for shareable read-only links.
+   * Optional for backwards-compat with pre-slice-5 records.
+   */
+  shareToken?: string | null;
+  /**
+   * Unix ms timestamp when the share token expires. Null if no active share.
+   * Optional for backwards-compat with pre-slice-5 records.
+   */
+  shareTokenExpiry?: number | null;
   zones: Zone[];
   placedItems: PlacedItemRecord[];
   createdAt: number;

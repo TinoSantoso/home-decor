@@ -211,5 +211,19 @@
     "essential": "Essential",
     "recommended": "Recommended",
     "optional": "Optional"
+  },
+  "share": {
+    "label": "Share Project",
+    "copyLink": "Copy Link",
+    "copied": "Link copied!",
+    "linkCopiedToast": "Share link copied to clipboard.",
+    "readOnlyLabel": "Read-only view",
+    "zonesLabel": "Zones",
+    "floorPlanRef": "Floor plan reference",
+    "expired": "Link Expired",
+    "expiredHelp": "This share link has expired. The project owner can generate a new link.",
+    "invalid": "Invalid Link",
+    "invalidHelp": "This share link is not valid. It may have been revoked.",
+    "goHome": "Go to Dashboard"
   }
 }

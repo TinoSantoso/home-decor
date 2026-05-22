@@ -211,5 +211,19 @@
     "essential": "Esensial",
     "recommended": "Direkomendasikan",
     "optional": "Opsional"
+  },
+  "share": {
+    "label": "Bagikan Proyek",
+    "copyLink": "Salin Tautan",
+    "copied": "Tautan disalin!",
+    "linkCopiedToast": "Tautan bagikan disalin ke clipboard.",
+    "readOnlyLabel": "Tampilan hanya-baca",
+    "zonesLabel": "Zona",
+    "floorPlanRef": "Referensi denah",
+    "expired": "Tautan Kadaluarsa",
+    "expiredHelp": "Tautan bagikan ini sudah kadaluarsa. Pemilik proyek dapat membuat tautan baru.",
+    "invalid": "Tautan Tidak Valid",
+    "invalidHelp": "Tautan bagikan ini tidak valid. Mungkin telah dicabut.",
+    "goHome": "Ke Beranda"
   }
 }

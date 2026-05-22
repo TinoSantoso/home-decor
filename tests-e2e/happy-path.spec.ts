@@ -248,3 +248,71 @@ test.describe('Phase 1 happy path (Bahasa Indonesia locale)', () => {
     await expect(page.getByText(/1 zona/).first()).toBeVisible();
   });
 });
+
+test.describe('Phase 3 slice 5: shareable read-only links', () => {
+  test('generates a share link and renders a read-only estimate view', async ({
+    page,
+  }) => {
+    // 1. Create project with a zone and item.
+    await page.goto('/projects/new');
+    await page.getByRole('button', { name: /Rumah Tapak T36/ }).click();
+    await expect(page).toHaveURL(/\/projects\/[A-Za-z0-9_-]+\/editor$/);
+    await page.getByRole('button', { name: 'Ruang Tamu' }).first().click();
+    await page.getByRole('button', { name: 'Rekomendasi' }).click();
+    await page
+      .getByRole('button', { name: /Tambahkan ke Zona/ })
+      .first()
+      .click();
+    await expect(page.getByText('Tersimpan')).toBeVisible();
+
+    // 2. Navigate to the estimate page and wait for the share button.
+    await page.getByRole('link', { name: 'Lihat Estimasi' }).click();
+    await expect(page).toHaveURL(/\/projects\/[A-Za-z0-9_-]+\/estimate$/);
+    await expect(
+      page.getByRole('heading', { name: /TOTAL KESELURUHAN/i }),
+    ).toBeVisible();
+    // Wait for the Copy Link button to appear (it only shows when load.kind === 'ready').
+    const shareButton = page.getByTestId('copy-share-link');
+    await expect(shareButton).toBeVisible({ timeout: 10_000 });
+
+    // 3. Click "Copy Link" button. It generates a token and stores the share URL
+    //    in the data-share-url attribute.
+    await shareButton.click();
+    // Wait for the async share URL to populate on the button.
+    await page.waitForFunction(
+      () =>
+        (document.querySelector('[data-testid="copy-share-link"]') as HTMLElement | null)
+          ?.getAttribute('data-share-url') !== '',
+      { timeout: 10_000 },
+    );
+    const url = (await shareButton.getAttribute('data-share-url')) ?? '';
+    expect(url).toMatch(/\/share\/[A-Za-z0-9_-]+$/);
+
+    // 4. Open the share link in a new page (simulating a recipient).
+    const sharePage = await page.context().newPage();
+    await sharePage.goto(url);
+
+    // 5. Verify read-only view: grand total and "read-only" label.
+    await expect(
+      sharePage.getByRole('heading', { name: /TOTAL KESELURUHAN/i }),
+    ).toBeVisible();
+    await expect(
+      sharePage.getByText(/Tampilan hanya-baca|Read-only view/),
+    ).toBeVisible();
+
+    // 6. Verify PDF export button is present (read-only can still export).
+    await expect(
+      sharePage.getByRole('button', { name: /Unduh PDF|Download PDF/ }),
+    ).toBeVisible();
+
+    // 7. Verify no "Copy Link" button (no editing controls on share page).
+    await expect(
+      sharePage.getByRole('button', { name: /Salin Tautan|Copy Link/ }),
+    ).toHaveCount(0);
+
+    // 8. Verify the zone pill is visible.
+    await expect(sharePage.getByText('Ruang Tamu').first()).toBeVisible();
+
+    await sharePage.close();
+  });
+});
