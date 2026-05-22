@@ -143,6 +143,84 @@ test.describe('Phase 1 happy path (Bahasa Indonesia locale)', () => {
     ).toBeVisible();
   });
 
+  test('uploads a floor-plan reference image and persists the URL across reload', async ({
+    page,
+  }) => {
+    // Stub the TanStack Start server-fn endpoint BEFORE any nav.
+    // Protocol notes (from @tanstack/start-client-core/createServerFn.js):
+    //   - URL is `${TSS_SERVER_FN_BASE}<functionId>` (default base = "/_serverFn").
+    //   - The server-side base middleware wraps the user's return value as
+    //     `{ result: <user-return> }` before serialization, and the top-level
+    //     wrapper extracts `result.result`. So a stubbed JSON response must
+    //     mirror that shape, not the raw upload result, or the hook reads
+    //     `.url` off `undefined`.
+    //   - Plain `application/json` (no `x-tss-serialized` header) makes the
+    //     fetcher return the body verbatim — no seroval framing needed.
+    await page.route('**/_serverFn/**', async (route) => {
+      const req = route.request();
+      if (req.method() !== 'POST') {
+        await route.continue();
+        return;
+      }
+      const body = req.postData() ?? '';
+      // Sanity-check that this is in fact the upload payload, not some
+      // other future server fn.
+      if (!body.includes('bodyBase64')) {
+        await route.continue();
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          result: {
+            ok: true,
+            key: 'floor-plans/test/stub.png',
+            url: 'https://assets.test.local/floor-plans/test/stub.png',
+          },
+        }),
+      });
+    });
+
+    await page.goto('/projects/new');
+    await page.getByRole('button', { name: /Rumah Tapak T45/ }).click();
+    await expect(page).toHaveURL(/\/projects\/[A-Za-z0-9_-]+\/editor$/);
+
+    // Smallest valid PNG (1x1 transparent) — enough to clear the
+    // fileToBase64 "empty blob" guard.
+    const pngBytes = Buffer.from(
+      '89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000a49444154789c63000100000005000101' +
+        '0d0a2db40000000049454e44ae426082',
+      'hex',
+    );
+
+    await page.getByTestId('floor-plan-file-input').setInputFiles({
+      name: 'sketch.png',
+      mimeType: 'image/png',
+      buffer: pngBytes,
+    });
+
+    // Once the stub resolves, the image and "Replace" button render.
+    const img = page.getByTestId('floor-plan-image');
+    await expect(img).toBeVisible({ timeout: 10_000 });
+    await expect(img).toHaveAttribute(
+      'src',
+      'https://assets.test.local/floor-plans/test/stub.png',
+    );
+
+    // Auto-save fires because floorPlanImageUrl is in the watched keys.
+    await expect(page.getByText('Tersimpan')).toBeVisible();
+
+    // Reload — the URL must come back from IDB.
+    await page.reload();
+    const imgAfterReload = page.getByTestId('floor-plan-image');
+    await expect(imgAfterReload).toBeVisible({ timeout: 10_000 });
+    await expect(imgAfterReload).toHaveAttribute(
+      'src',
+      'https://assets.test.local/floor-plans/test/stub.png',
+    );
+  });
+
   test('newly-created project appears on the dashboard with persistence after reload', async ({
     page,
   }) => {

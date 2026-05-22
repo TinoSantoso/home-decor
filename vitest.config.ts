@@ -18,6 +18,14 @@ export default defineConfig({
     // and .gitignore) invisible to the main checkout's test discovery —
     // without it, vitest picks up nested `tests-e2e/*.spec.ts` from
     // sibling worktrees and crashes on the duplicate Playwright import.
-    exclude: ['**/node_modules/**', '**/dist/**', 'tests-e2e/**', '.worktrees/**'],
+    // `.claude/worktrees/**` covers the native EnterWorktree path used by
+    // the harness, which creates worktrees under that hidden subdirectory.
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      'tests-e2e/**',
+      '.worktrees/**',
+      '.claude/worktrees/**',
+    ],
   },
 });

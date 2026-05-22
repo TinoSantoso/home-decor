@@ -65,7 +65,13 @@
     "noRecommendations": "Belum ada rekomendasi untuk konfigurasi ini. Coba ubah gaya atau tipe zona.",
     "noPlacedItems": "Belum ada item terpasang di zona ini. Lihat tab Rekomendasi untuk menambahkan.",
     "removeItem": "Hapus item",
-    "itemMissing": "Item tidak ditemukan di katalog"
+    "itemMissing": "Item tidak ditemukan di katalog",
+    "floorPlanReference": "Denah Referensi",
+    "uploadReference": "Unggah Denah",
+    "replaceReference": "Ganti Denah",
+    "removeReference": "Hapus Denah",
+    "uploading": "Mengunggah…",
+    "uploadFailed": "Unggah gagal"
   },
   "reason": {
     "style_match": "Gaya cocok",
