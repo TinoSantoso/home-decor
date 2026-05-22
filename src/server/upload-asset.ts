@@ -1,9 +1,11 @@
 /**
- * R2 asset upload — plain async function (not yet a TanStack Start server
- * function). The 'use server' directive and createServerFn wrapper are
- * deferred to a future slice once the end-to-end R2 credentials are wired.
+ * R2 asset upload — plain async function plus a TanStack Start server-function
+ * wrapper. The wrapper accepts the body as a base64 string because Uint8Array /
+ * Buffer cannot cross the JSON-RPC transport that TanStack uses for server
+ * functions.
  */
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { resolveAssetUrl } from '../lib/asset-urls';
 
@@ -71,3 +73,26 @@ export async function uploadAsset(input: UploadAssetInput): Promise<UploadAssetR
 
   return { ok: true, key: input.key, url };
 }
+
+const serverFnSchema = z.object({
+  key: z.string().min(1),
+  contentType: z.string().min(1),
+  bodyBase64: z.string().min(1),
+});
+
+export type UploadAssetServerFnInput = z.infer<typeof serverFnSchema>;
+
+export async function uploadAssetFromBase64(
+  input: UploadAssetServerFnInput,
+): Promise<UploadAssetResult> {
+  const body = Buffer.from(input.bodyBase64, 'base64');
+  return uploadAsset({
+    key: input.key,
+    contentType: input.contentType,
+    body,
+  });
+}
+
+export const uploadAssetFn = createServerFn({ method: 'POST' })
+  .inputValidator(serverFnSchema)
+  .handler(async ({ data }) => uploadAssetFromBase64(data));
