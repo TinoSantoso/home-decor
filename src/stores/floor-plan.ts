@@ -19,6 +19,7 @@ interface FloorPlanState {
   taxEnabled: boolean;
   climateZone: string;
   styleTag: StyleTag | null;
+  floorPlanImageUrl: string | null;
   zones: Zone[];
   selectedZoneId: string | null;
   placedItems: PlacedItemRecord[];
@@ -42,6 +43,7 @@ interface FloorPlanState {
   setTaxEnabled: (enabled: boolean) => void;
   setSnapEnabled: (enabled: boolean) => void;
   setStyleTag: (tag: StyleTag | null) => void;
+  setFloorPlanImageUrl: (url: string | null) => void;
   addPlacedItem: (zoneId: string, itemId: string, quantity?: number) => string;
   updatePlacedItem: (id: string, patch: Partial<Omit<PlacedItemRecord, 'id'>>) => void;
   removePlacedItem: (id: string) => void;
@@ -75,6 +77,7 @@ const INITIAL: Pick<
   | 'taxEnabled'
   | 'climateZone'
   | 'styleTag'
+  | 'floorPlanImageUrl'
   | 'zones'
   | 'selectedZoneId'
   | 'placedItems'
@@ -91,6 +94,7 @@ const INITIAL: Pick<
   taxEnabled: false,
   climateZone: 'tropical_indonesia',
   styleTag: null,
+  floorPlanImageUrl: null,
   zones: [],
   selectedZoneId: null,
   placedItems: [],
@@ -113,6 +117,7 @@ export const useFloorPlan = create<FloorPlanState>((set, get) => ({
       taxEnabled: record.taxEnabled,
       climateZone: record.climateZone,
       styleTag: record.styleTag ?? null,
+      floorPlanImageUrl: record.floorPlanImageUrl ?? null,
       zones: record.zones,
       placedItems: record.placedItems ?? [],
       selectedZoneId: null,
@@ -160,6 +165,8 @@ export const useFloorPlan = create<FloorPlanState>((set, get) => ({
   setSnapEnabled: (snapEnabled) => set({ snapEnabled }),
 
   setStyleTag: (styleTag) => set({ styleTag }),
+
+  setFloorPlanImageUrl: (floorPlanImageUrl) => set({ floorPlanImageUrl }),
 
   addPlacedItem: (zoneId, itemId, quantity = 1) => {
     const id = nanoid(10);
@@ -227,6 +234,7 @@ export const useFloorPlan = create<FloorPlanState>((set, get) => ({
       taxEnabled: s.taxEnabled,
       climateZone: s.climateZone,
       styleTag: s.styleTag,
+      floorPlanImageUrl: s.floorPlanImageUrl,
       zones: s.zones,
       placedItems: s.placedItems,
       createdAt: 0,

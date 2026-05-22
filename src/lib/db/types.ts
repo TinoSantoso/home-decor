@@ -21,6 +21,8 @@ export interface ProjectRecord {
   taxEnabled: boolean;
   climateZone: string;
   styleTag: StyleTag | null;
+  /** Public R2 URL of a user-uploaded floor-plan reference image (sketch/photo). */
+  floorPlanImageUrl: string | null;
   zones: Zone[];
   placedItems: PlacedItemRecord[];
   createdAt: number;

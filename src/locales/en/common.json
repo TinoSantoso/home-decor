@@ -65,7 +65,13 @@
     "noRecommendations": "No recommendations match. Try changing the style or zone type.",
     "noPlacedItems": "No items placed in this zone yet. See the Recommendations tab to add some.",
     "removeItem": "Remove item",
-    "itemMissing": "Item not in catalog"
+    "itemMissing": "Item not in catalog",
+    "floorPlanReference": "Floor Plan Reference",
+    "uploadReference": "Upload Reference",
+    "replaceReference": "Replace Reference",
+    "removeReference": "Remove Reference",
+    "uploading": "Uploading…",
+    "uploadFailed": "Upload failed"
   },
   "reason": {
     "style_match": "Style match",

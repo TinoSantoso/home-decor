@@ -10,6 +10,7 @@ export async function createProject(
     id: nanoid(8),
     ...input,
     styleTag: null,
+    floorPlanImageUrl: null,
     zones: [],
     placedItems: [],
     createdAt: now,
@@ -21,8 +22,8 @@ export async function createProject(
 }
 
 /**
- * Backwards-compatible record migration: pre-v2 records lack `placedItems`,
- * so we default it to `[]` here rather than running a formal IDB migration.
+ * Backwards-compatible record migration: older records may lack newer fields,
+ * so we default each one here rather than running a formal IDB migration.
  */
 function hydrate(record: ProjectRecord | undefined): ProjectRecord | null {
   if (!record) return null;
@@ -30,6 +31,7 @@ function hydrate(record: ProjectRecord | undefined): ProjectRecord | null {
     ...record,
     placedItems: record.placedItems ?? [],
     styleTag: record.styleTag ?? null,
+    floorPlanImageUrl: record.floorPlanImageUrl ?? null,
   };
 }
 

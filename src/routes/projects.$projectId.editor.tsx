@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EditorToolbar } from '../components/editor/EditorToolbar';
+import { FloorPlanUploader } from '../components/editor/FloorPlanUploader';
 import { ZoneDetailPanel } from '../components/editor/ZoneDetailPanel';
 import { useFloorPlan } from '../stores/floor-plan';
 import { getProject, saveProject } from '../lib/db/projects';
@@ -70,6 +71,7 @@ function EditorPage() {
         'contingencyPct',
         'taxEnabled',
         'placedItems',
+        'floorPlanImageUrl',
       ];
       if (watched.some((k) => state[k] !== prev[k])) persist();
     });
@@ -148,6 +150,8 @@ function EditorPage() {
       </header>
 
       <EditorToolbar />
+
+      <FloorPlanUploader />
 
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[1fr_360px]">
         <Suspense
