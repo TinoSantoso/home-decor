@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { listProjects, deleteProject } from '../lib/db/projects';
 import type { ProjectRecord } from '../lib/db/types';
 import { formatRelativeFromNow } from '../lib/relative-time';
+import { useAuthStore } from '../stores/auth';
 
 export const Route = createFileRoute('/dashboard')({
   ssr: false,
@@ -13,11 +14,22 @@ export const Route = createFileRoute('/dashboard')({
 function DashboardPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const loading = useAuthStore((s) => s.loading);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const openAuthModal = useAuthStore((s) => s.openAuthModal);
   const [projects, setProjects] = useState<ProjectRecord[] | null>(null);
 
   useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      openAuthModal();
+      void navigate({ to: '/' });
+    }
+  }, [isAuthenticated, loading, navigate, openAuthModal]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
     void listProjects().then(setProjects);
-  }, []);
+  }, [isAuthenticated]);
 
   async function onDelete(id: string) {
     await deleteProject(id);
@@ -26,6 +38,8 @@ function DashboardPage() {
   }
 
   const localeTag = i18n.language === 'id' ? 'id' : 'en';
+
+  if (loading || !isAuthenticated) return null;
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">

@@ -4,10 +4,16 @@ import {
   Scripts,
   createRootRoute,
 } from '@tanstack/react-router';
-import { Suspense, type ReactNode } from 'react';
-import { I18nextProvider } from 'react-i18next';
+import { Suspense, type ReactNode, useEffect } from 'react';
+import { I18nextProvider, useTranslation } from 'react-i18next';
 import i18n from '../lib/i18n';
 import globalsCss from '../styles/globals.css?url';
+import { AuthModal } from '../components/auth/AuthModal';
+import {
+  loadSessionFromCookies,
+  onAuthStateChange,
+  useAuthStore,
+} from '../stores/auth';
 
 export const Route = createRootRoute({
   head: () => ({
@@ -30,11 +36,83 @@ function RootComponent() {
   return (
     <RootDocument>
       <I18nextProvider i18n={i18n}>
-        <Suspense fallback={<div className="p-8">Memuat…</div>}>
-          <Outlet />
-        </Suspense>
+        <RootShell />
       </I18nextProvider>
     </RootDocument>
+  );
+}
+
+function RootShell() {
+  const init = useAuthStore((s) => s.init);
+  const loading = useAuthStore((s) => s.loading);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const authModalOpen = useAuthStore((s) => s.authModalOpen);
+  const openAuthModal = useAuthStore((s) => s.openAuthModal);
+  const closeAuthModal = useAuthStore((s) => s.closeAuthModal);
+  const signOut = useAuthStore((s) => s.signOut);
+  const { t } = useTranslation();
+
+  // Hydrate auth state from cookies on mount.
+  useEffect(() => {
+    void (async () => {
+      const session = await loadSessionFromCookies();
+      init(session);
+    })();
+
+    // Subscribe to auth changes (Google redirect, sign-out, etc.).
+    const unsubscribe = onAuthStateChange(() => {});
+    return () => {
+      unsubscribe.data.subscription.unsubscribe();
+    };
+  }, [init]);
+
+  return (
+    <>
+      {/* Global auth bar — visible after session hydration when not authenticated */}
+      {!loading && !isAuthenticated && (
+        <div className="border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-6 py-2">
+          <div className="mx-auto flex max-w-7xl items-center justify-between">
+            <span className="text-sm text-[color:var(--color-text-muted)]">
+              {t('auth.guardBody')}
+            </span>
+            <button
+              type="button"
+              onClick={openAuthModal}
+              className="rounded-[var(--radius)] bg-[color:var(--color-accent)] px-3 py-1 text-sm font-medium text-[color:var(--color-accent-fg)] hover:opacity-90"
+            >
+              {t('auth.modalTitle')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Authenticated nav bar */}
+      {!loading && isAuthenticated && (
+        <div className="border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-6 py-2">
+          <div className="mx-auto flex max-w-7xl items-center justify-end">
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              className="rounded-[var(--radius)] border border-[color:var(--color-border)] px-3 py-1 text-sm text-[color:var(--color-text-muted)] hover:border-[color:var(--color-danger)] hover:text-[color:var(--color-danger)]"
+            >
+              {t('auth.signOut')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <Suspense fallback={<div className="p-8">Memuat…</div>}>
+        <Outlet />
+      </Suspense>
+
+      <AuthModal
+        open={authModalOpen}
+        onOpenChange={(open) => {
+          if (open) openAuthModal();
+          else closeAuthModal();
+        }}
+      />
+    </>
   );
 }
 

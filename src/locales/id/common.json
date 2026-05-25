@@ -212,6 +212,28 @@
     "recommended": "Direkomendasikan",
     "optional": "Opsional"
   },
+  "auth": {
+    "modalTitle": "Masuk atau Daftar",
+    "emailDescription": "Kami akan mengirim tautan verifikasi ke email Anda.",
+    "googleDescription": "Masuk cepat dengan akun Google Anda.",
+    "tabEmail": "Email",
+    "tabGoogle": "Google",
+    "emailLabel": "Alamat Email",
+    "sending": "Mengirim…",
+    "sendMagicLink": "Kirim Tautan Masuk",
+    "sentTitle": "Tautan Terkirim!",
+    "sentBody": "Cek email {{email}} dan klik tautan untuk masuk.",
+    "tryAgain": "Kirim ulang",
+    "continueWithGoogle": "Lanjutkan dengan Google",
+    "termsNotice": "Dengan melanjutkan, Anda menyetujui Syarat Layanan dan Kebijakan Privasi kami.",
+    "close": "Tutup",
+    "signOut": "Keluar",
+    "signedOut": "Berhasil keluar.",
+    "guardTitle": "Masuk Diperlukan",
+    "guardBody": "Anda perlu masuk untuk mengakses halaman ini.",
+    "callbackProcessing": "Memproses autentikasi…",
+    "callbackFailed": "Autentikasi gagal"
+  },
   "share": {
     "label": "Bagikan Proyek",
     "copyLink": "Salin Tautan",

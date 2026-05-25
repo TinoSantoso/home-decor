@@ -212,6 +212,28 @@
     "recommended": "Recommended",
     "optional": "Optional"
   },
+  "auth": {
+    "modalTitle": "Sign in or Sign up",
+    "emailDescription": "We'll send a verification link to your email.",
+    "googleDescription": "Sign in quickly with your Google account.",
+    "tabEmail": "Email",
+    "tabGoogle": "Google",
+    "emailLabel": "Email Address",
+    "sending": "Sending…",
+    "sendMagicLink": "Send Login Link",
+    "sentTitle": "Link Sent!",
+    "sentBody": "Check {{email}} and click the link to sign in.",
+    "tryAgain": "Send again",
+    "continueWithGoogle": "Continue with Google",
+    "termsNotice": "By continuing, you agree to our Terms of Service and Privacy Policy.",
+    "close": "Close",
+    "signOut": "Sign out",
+    "signedOut": "Signed out successfully.",
+    "guardTitle": "Sign in Required",
+    "guardBody": "You need to sign in to access this page.",
+    "callbackProcessing": "Processing authentication…",
+    "callbackFailed": "Authentication failed"
+  },
   "share": {
     "label": "Share Project",
     "copyLink": "Copy Link",

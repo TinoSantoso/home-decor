@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createProject } from '../lib/db/projects';
+import { useAuthStore } from '../stores/auth';
 
 export const Route = createFileRoute('/projects/new')({
   ssr: false,
@@ -21,6 +22,18 @@ function NewProjectPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
+  const loading = useAuthStore((s) => s.loading);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const openAuthModal = useAuthStore((s) => s.openAuthModal);
+
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      openAuthModal();
+      void navigate({ to: '/' });
+    }
+  }, [isAuthenticated, loading, navigate, openAuthModal]);
+
+  if (loading || !isAuthenticated) return null;
 
   async function pickTemplate(templateId: string) {
     if (busy) return;
