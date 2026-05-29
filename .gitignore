@@ -29,6 +29,7 @@ src/routeTree.gen.ts
 !.vscode/settings.json
 .idea/
 .claude/
+CLAUDE.md
 .agents/
 .superpowers/
 skills-lock.json
