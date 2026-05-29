@@ -21,6 +21,8 @@ import type { BudgetTier, CostCategory } from '../lib/cost-engine';
 import { calculateCost } from '../lib/cost-engine';
 import { loadCatalog, type Item } from '../lib/catalog';
 import { ExportPdfButton } from '../components/estimate/ExportPdfButton';
+import { PaywallModal } from '../components/editor/PaywallModal';
+import { getSharedProjectFn } from '../server/projects';
 
 export const Route = createFileRoute('/projects/$projectId/share/$token')({
   ssr: true,
@@ -48,6 +50,7 @@ function SharePage() {
   const [placedItems, setPlacedItems] = useState<PlacedItemRecord[]>([]);
   const [floorPlanImageUrl, setFloorPlanImageUrl] = useState<string | null>(null);
   const [catalog, setCatalog] = useState<Item[]>([]);
+  const [paywallOpen, setPaywallOpen] = useState(false);
 
   const localeTag = i18n.language === 'id' ? 'id-ID' : 'en-US';
 
@@ -60,6 +63,28 @@ function SharePage() {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
+      let cloudRecord = null;
+      try {
+        cloudRecord = await getSharedProjectFn({ data: { id: projectId, token } });
+      } catch (error) {
+        console.warn('Cloud share lookup failed, falling back to local share link:', error);
+      }
+      if (cancelled) return;
+
+      if (cloudRecord) {
+        setLoad({
+          kind: 'ready',
+          name: cloudRecord.name,
+          budgetTier: cloudRecord.budgetTier,
+          contingencyPct: cloudRecord.contingencyPct,
+          taxEnabled: cloudRecord.taxEnabled,
+        });
+        setZones(cloudRecord.zones);
+        setPlacedItems(cloudRecord.placedItems ?? []);
+        setFloorPlanImageUrl(cloudRecord.floorPlanImageUrl ?? null);
+        return;
+      }
+
       const valid = await isShareTokenValid(projectId, token);
       if (cancelled) return;
 
@@ -242,6 +267,7 @@ function SharePage() {
                   contingencyPct={load.contingencyPct}
                   taxEnabled={load.taxEnabled}
                   localeTag={localeTag}
+                  onPaywall={() => setPaywallOpen(true)}
                 />
               </div>
             </div>
@@ -337,6 +363,13 @@ function SharePage() {
           </section>
         </>
       ) : null}
+
+      <PaywallModal
+        open={paywallOpen}
+        onOpenChange={setPaywallOpen}
+        userStatus="unauthenticated"
+        closeLabel={t('paywall.ctaClose')}
+      />
     </main>
   );
 }

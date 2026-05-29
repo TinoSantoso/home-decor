@@ -73,6 +73,50 @@
     "uploading": "Uploading…",
     "uploadFailed": "Upload failed"
   },
+  "layoutV2": {
+    "modeClassic": "Classic zones",
+    "modeAdvanced": "Advanced layout",
+    "floor": "Floor",
+    "addFloor": "Add floor",
+    "inspector": "Layout inspector",
+    "selectHint": "Select an area or wall to edit the layout.",
+    "floorMaterial": "Floor material",
+    "terrainMaterial": "Outdoor material",
+    "wallSelected": "Selected wall",
+    "addDoor": "Add door",
+    "addWindow": "Add window",
+    "quickAdd": "Quick add",
+    "addLivingArea": "Add living area",
+    "addTerraceArea": "Add terrace area",
+    "openings": "Openings",
+    "doorOffset": "Door offset",
+    "windowOffset": "Window offset",
+    "openingWidth": "Opening width",
+    "removeOpening": "Remove opening",
+    "doorOffsetIndexed": "Door offset {{index}}",
+    "windowOffsetIndexed": "Window offset {{index}}",
+    "openingWidthIndexed": "Opening width {{index}}",
+    "removeOpeningIndexed": "Remove opening {{index}}",
+    "openingType": {
+      "door": "door",
+      "window": "window"
+    },
+    "floorMaterials": {
+      "tile": "Tile",
+      "wood": "Wood",
+      "concrete": "Concrete",
+      "stone": "Stone",
+      "outdoor": "Outdoor"
+    },
+    "terrainMaterials": {
+      "grass": "Grass",
+      "paving": "Paving",
+      "gravel": "Gravel",
+      "decking": "Decking",
+      "soil": "Soil"
+    },
+    "noOpenings": "No doors or windows on this wall yet."
+  },
   "reason": {
     "style_match": "Style match",
     "climate_fit": "Climate-suited",
@@ -230,9 +274,7 @@
     "signOut": "Sign out",
     "signedOut": "Signed out successfully.",
     "guardTitle": "Sign in Required",
-    "guardBody": "You need to sign in to access this page.",
-    "callbackProcessing": "Processing authentication…",
-    "callbackFailed": "Authentication failed"
+    "guardBody": "You need to sign in to access this page."
   },
   "share": {
     "label": "Share Project",
@@ -247,5 +289,31 @@
     "invalid": "Invalid Link",
     "invalidHelp": "This share link is not valid. It may have been revoked.",
     "goHome": "Go to Dashboard"
+  },
+  "paywall": {
+    "title": "Out of Credits",
+    "body": "You've used all your PDF export credits. Sign in or sign up for {{credits}} free credits, or choose a plan for unlimited access.",
+    "creditsRemaining_one": "{{count}} credit remaining",
+    "creditsRemaining_other": "{{count}} credits remaining",
+    "ctaUpgrade": "Choose a Plan",
+    "ctaSignIn": "Sign in / Sign up",
+    "ctaClose": "Maybe Later",
+    "checkoutStarting": "Starting checkout…",
+    "checkoutError": "Checkout could not start. Check billing configuration or try again later.",
+    "freeCreditsTitle": "Free! {{credits}} Credits",
+    "freeCreditsBody": "Sign up now and get {{credits}} free PDF export credits.",
+    "upgradeTitle": "Unlimited Credits",
+    "upgradeBody": "Get unlimited credits for all premium features.",
+    "features": {
+      "unlimitedExports": "Unlimited PDF exports",
+      "unlimitedProjects": "Unlimited projects",
+      "unlimitedShare": "Unlimited share links"
+    },
+    "payingUserTitle": "Limit Reached",
+    "payingUserBody": "You've used all the premium features available in your plan."
+  },
+  "migration": {
+    "importing": "Copying local projects to your cloud account…",
+    "error": "Some local projects were not copied. Try refreshing when your connection is stable."
   }
 }

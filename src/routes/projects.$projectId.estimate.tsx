@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFloorPlan } from '../stores/floor-plan';
+import { useAuthStore } from '../stores/auth';
 import { generateShareToken, getProject, saveProject } from '../lib/db/projects';
 import { debounce } from '../lib/debounce';
 import { calculateCost, type BudgetTier, type CostCategory } from '../lib/cost-engine';
@@ -11,6 +12,17 @@ import { zoneAreaM2 } from '../lib/zones';
 import { loadCatalog, type Item } from '../lib/catalog';
 import { toPlacedItemInputs } from '../lib/placed-items';
 import { ExportPdfButton } from '../components/estimate/ExportPdfButton';
+import {
+  PaywallModal,
+  type UserPaywallStatus,
+} from '../components/editor/PaywallModal';
+import { checkEntitlementForExportFn } from '../server/check-entitlement';
+import {
+  generateOwnedShareTokenFn,
+  getOwnedProjectFn,
+  saveOwnedProjectFn,
+} from '../server/projects';
+import { createCheckoutFn } from '../server/checkout';
 
 export const Route = createFileRoute('/projects/$projectId/estimate')({
   ssr: false,
@@ -44,15 +56,44 @@ function EstimatePage() {
   const [catalog, setCatalog] = useState<Item[]>([]);
   const [shareCopied, setShareCopied] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [paywallOpen, setPaywallOpen] = useState(false);
+  const [userPaywallStatus, setUserPaywallStatus] = useState<UserPaywallStatus>('unauthenticated');
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  const { isAuthenticated, loading: loadingAuth } = useAuthStore();
 
   useEffect(() => {
     void loadCatalog().then(setCatalog);
   }, []);
 
+  // Fetch entitlement status on mount to drive the PaywallModal user status.
   useEffect(() => {
+    if (load.kind !== 'ready') return;
+    void (async () => {
+      try {
+        const result = await checkEntitlementForExportFn();
+        // Derive which modal variant to show if the export is triggered.
+        if (!result.hasUnlimited && !result.hasCredits) {
+          setUserPaywallStatus(isAuthenticated ? 'authenticated_no_credits' : 'unauthenticated');
+        }
+        // Note: users with credits or unlimited access still see ExportPdfButton normally;
+        // the paywall is only triggered server-side when credits genuinely run out.
+      } catch {
+        // Network error — best-effort: show auth modal for unauthenticated, upgrade for authed.
+        if (isAuthenticated) setUserPaywallStatus('authenticated_no_credits');
+        else setUserPaywallStatus('unauthenticated');
+      }
+    })();
+  }, [load.kind, isAuthenticated]);
+
+  useEffect(() => {
+    if (loadingAuth) return;
     let cancelled = false;
     void (async () => {
-      const record = await getProject(projectId);
+      const record = isAuthenticated
+        ? await getOwnedProjectFn({ data: { id: projectId } })
+        : await getProject(projectId);
       if (cancelled) return;
       if (!record) {
         setLoad({ kind: 'not_found' });
@@ -65,7 +106,7 @@ function EstimatePage() {
       cancelled = true;
       reset();
     };
-  }, [projectId, loadProject, reset]);
+  }, [isAuthenticated, loadingAuth, projectId, loadProject, reset]);
 
   const persistRef = useRef<ReturnType<typeof debounce<[]>> | null>(null);
   useEffect(() => {
@@ -73,7 +114,9 @@ function EstimatePage() {
     const persist = debounce(() => {
       const record = useFloorPlan.getState().toProjectRecord();
       if (!record) return;
-      void saveProject(record);
+      void (isAuthenticated
+        ? saveOwnedProjectFn({ data: record })
+        : saveProject(record));
     }, 400);
     persistRef.current = persist;
 
@@ -92,7 +135,7 @@ function EstimatePage() {
       persist.flush();
       persistRef.current = null;
     };
-  }, [load.kind]);
+  }, [isAuthenticated, load.kind]);
 
   const localeTag = i18n.language === 'id' ? 'id-ID' : 'en-US';
 
@@ -109,7 +152,9 @@ function EstimatePage() {
 
   const handleCopyShareLink = async () => {
     try {
-      const token = await generateShareToken(projectId);
+      const token = isAuthenticated
+        ? (await generateOwnedShareTokenFn({ data: { id: projectId } }))?.token
+        : await generateShareToken(projectId);
       if (!token) {
         console.warn('generateShareToken returned null');
         return;
@@ -121,6 +166,21 @@ function EstimatePage() {
       setTimeout(() => setShareCopied(false), 3000);
     } catch (err) {
       console.error('Share link copy failed:', err);
+    }
+  };
+
+  const handleUpgrade = async () => {
+    if (checkoutLoading) return;
+    setCheckoutLoading(true);
+    setCheckoutError(null);
+    try {
+      const { url } = await createCheckoutFn({ data: { plan: 'unlimited_monthly' } });
+      window.location.href = url;
+    } catch (error) {
+      console.error('Checkout failed:', error);
+      setCheckoutError(t('paywall.checkoutError'));
+    } finally {
+      setCheckoutLoading(false);
     }
   };
 
@@ -203,6 +263,7 @@ function EstimatePage() {
             contingencyPct={contingencyPct}
             taxEnabled={taxEnabled}
             localeTag={localeTag}
+            onPaywall={() => setPaywallOpen(true)}
           />
         </div>
       </header>
@@ -396,6 +457,16 @@ function EstimatePage() {
           </section>
         </>
       )}
+
+      <PaywallModal
+        open={paywallOpen}
+        onOpenChange={setPaywallOpen}
+        userStatus={userPaywallStatus}
+        onUpgrade={() => void handleUpgrade()}
+        upgradeLoading={checkoutLoading}
+        upgradeError={checkoutError}
+        closeLabel={t('paywall.ctaClose')}
+      />
     </main>
   );
 }

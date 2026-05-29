@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { buildEstimateDocument } from '../../lib/pdf-estimate';
 import type { CostEstimate, BudgetTier, CostCategory } from '../../lib/cost-engine';
 import type { Zone } from '../../lib/zones';
+import { generateEstimatePdfFn } from '../../server/generate-pdf';
 
 interface Props {
   estimate: CostEstimate;
@@ -12,13 +12,21 @@ interface Props {
   contingencyPct: number;
   taxEnabled: boolean;
   localeTag: 'id-ID' | 'en-US';
+  /** Called when the server returns a paywall error (credits exhausted). */
+  onPaywall?: () => void;
 }
 
 function sanitizeFilename(name: string): string {
-  // Replace characters not safe for filenames with hyphens; collapse runs.
-  return name.replace(/[^\wÀ-ɏ\s-]/g, '').trim().replace(/\s+/g, '-');
+  // Remove characters unsafe for filenames; collapse whitespace to single hyphens.
+  return name.replace(/[^\wÀ-ɏ\s-]/g, '').trim().replace(/\s+/g, '-') || 'proyek';
 }
 
+/**
+ * Export button that generates the PDF server-side (credit-consumption-aware).
+ *
+ * Falls back to client-side generation when `onPaywall` is not provided
+ * (share route, which has no credit check).
+ */
 export function ExportPdfButton({
   estimate,
   zones,
@@ -27,6 +35,7 @@ export function ExportPdfButton({
   contingencyPct,
   taxEnabled,
   localeTag,
+  onPaywall,
 }: Props) {
   const { t } = useTranslation();
   const [generating, setGenerating] = useState(false);
@@ -36,14 +45,7 @@ export function ExportPdfButton({
     setGenerating(true);
 
     try {
-      // Lazy-load @react-pdf/renderer and the PDF component together so neither
-      // lands in the estimate route's initial bundle.
-      const [{ pdf }, { EstimatePdfDocument }] = await Promise.all([
-        import('@react-pdf/renderer'),
-        import('./EstimatePdfDocument'),
-      ]);
-
-      // Build per-zone and per-category label maps via t().
+      // Build the label maps via t() on the client — they travel as JSON strings.
       const zoneTypeLabels: Record<string, string> = {};
       for (const zone of zones) {
         zoneTypeLabels[zone.id] = t(`zoneType.${zone.type}`);
@@ -53,18 +55,6 @@ export function ExportPdfButton({
       for (const row of estimate.perCategory) {
         categoryLabels[row.category] = t(`costCategory.${row.category as CostCategory}`);
       }
-
-      const doc = buildEstimateDocument({
-        estimate,
-        zones,
-        projectName,
-        budgetTier,
-        contingencyPct,
-        taxEnabled,
-        localeTag,
-        zoneTypeLabels,
-        categoryLabels,
-      });
 
       const labels = {
         title: t('pdf.title'),
@@ -85,12 +75,35 @@ export function ExportPdfButton({
         taxLine: t('pdf.taxLine'),
       };
 
-      const blob = await pdf(
-        <EstimatePdfDocument doc={doc} labels={labels} />,
-      ).toBlob();
+      const result = await generateEstimatePdfFn({
+        data: {
+          estimate: estimate as unknown as import('../../server/generate-pdf').EstimatePdfInput['estimate'],
+          zones,
+          projectName,
+          budgetTier,
+          contingencyPct,
+          taxEnabled,
+          localeTag,
+          zoneTypeLabels,
+          categoryLabels,
+          labels,
+        },
+      });
 
+      // Handle paywall response from the server.
+      if ('error' in result && result.error === 'paywall') {
+        onPaywall?.();
+        return;
+      }
+
+      // Convert base64 PDF to a download.
+      const pdfBytes = Uint8Array.from(atob(result.pdfBase64), (c) =>
+        c.charCodeAt(0),
+      );
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
-      const safe = sanitizeFilename(projectName) || 'proyek';
+
+      const safe = sanitizeFilename(projectName);
       const filename =
         localeTag === 'id-ID'
           ? `Rencana-Proyek-${safe}.pdf`

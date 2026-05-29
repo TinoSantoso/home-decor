@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase/client';
-import type { Session } from '@supabase/supabase-js';
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 /**
  * Auth state — mirrors the current Supabase session.
@@ -91,7 +91,7 @@ export async function loadSessionFromCookies(): Promise<Session | null> {
  * Returns an unsubscribe function.
  */
 export function onAuthStateChange(callback: (session: Session | null) => void) {
-  return supabase.auth.onAuthStateChange((_event, session) => {
+  return supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
     callback(session);
     useAuthStore.getState().init(session);
   });

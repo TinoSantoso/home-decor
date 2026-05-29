@@ -7,6 +7,7 @@ import {
   computeGroundSize,
   zoneToTransform,
 } from '../../lib/tour-transform';
+import { getRenderableFloorIds } from '../../lib/layout-v2/tour-transform';
 import { TOUR_GROUND_COLOR } from '../../lib/tour-colors';
 import { getZoneColor } from '../../lib/tour-materials';
 import { loadCatalog } from '../../lib/catalog';
@@ -17,6 +18,9 @@ import { TourModeToggle } from './TourModeToggle';
 import { ZoneMesh } from './ZoneMesh';
 import { PlacedItemMesh } from './PlacedItemMesh';
 import { ItemPlacementPanel } from './ItemPlacementPanel';
+import { LayoutAreaMesh } from './LayoutAreaMesh';
+import { LayoutOpeningMarker } from './LayoutOpeningMarker';
+import { LayoutWallMesh } from './LayoutWallMesh';
 import { useZoneClickHandler } from './useZoneClickHandler';
 
 interface TourSceneProps {
@@ -43,6 +47,8 @@ export default function TourScene({ snapshot }: TourSceneProps) {
   const liveSelectedZoneId = useFloorPlan((s) => s.selectedZoneId);
   const livePlacedItems = useFloorPlan((s) => s.placedItems);
   const liveStyleTag = useFloorPlan((s) => s.styleTag);
+  const liveLayoutV2 = useFloorPlan((s) => s.layoutV2);
+  const layoutTourFloorMode = useFloorPlan((s) => s.layoutTourFloorMode);
 
   const selectZone = useFloorPlan((s) => s.selectZone);
   const tourMode = useFloorPlan((s) => s.tourMode);
@@ -51,6 +57,7 @@ export default function TourScene({ snapshot }: TourSceneProps) {
   const selectedZoneId = snapshot ? snapshot.selectedZoneId : liveSelectedZoneId;
   const placedItems = snapshot ? snapshot.placedItems : livePlacedItems;
   const styleTag = snapshot ? snapshot.styleTag : liveStyleTag;
+  const layoutV2 = snapshot ? undefined : liveLayoutV2;
 
   const [catalog, setCatalog] = useState<Item[]>([]);
 
@@ -68,6 +75,16 @@ export default function TourScene({ snapshot }: TourSceneProps) {
 
   const handleZoneClick = useZoneClickHandler();
   const isSnapshot = snapshot !== undefined;
+  const renderableLayoutFloorIds = useMemo(() => {
+    if (!layoutV2) return new Set<string>();
+    return new Set(
+      getRenderableFloorIds(
+        layoutV2.floors.map((floor) => floor.id),
+        layoutV2.activeFloorId,
+        layoutTourFloorMode,
+      ),
+    );
+  }, [layoutTourFloorMode, layoutV2]);
 
   return (
     <div className="relative h-[700px] w-full overflow-hidden rounded-[var(--radius)] border border-[color:var(--color-border)] bg-[oklch(95%_0.005_95)]">
@@ -114,8 +131,59 @@ export default function TourScene({ snapshot }: TourSceneProps) {
             infiniteGrid={false}
           />
 
+          {layoutV2 &&
+            layoutV2.areas
+              .filter((area) => renderableLayoutFloorIds.has(area.floorId))
+              .map((area) => {
+                const floor = layoutV2.floors.find(
+                  (candidate) => candidate.id === area.floorId,
+                );
+                return (
+                  <LayoutAreaMesh
+                    key={area.id}
+                    area={area}
+                    elevationM={floor?.elevationM ?? 0}
+                  />
+                );
+              })}
+
+          {layoutV2 &&
+            layoutV2.walls
+              .filter((wall) => renderableLayoutFloorIds.has(wall.floorId))
+              .map((wall) => {
+                const floor = layoutV2.floors.find(
+                  (candidate) => candidate.id === wall.floorId,
+                );
+                return (
+                  <LayoutWallMesh
+                    key={wall.id}
+                    wall={wall}
+                    elevationM={floor?.elevationM ?? 0}
+                  />
+                );
+              })}
+
+          {layoutV2 &&
+            layoutV2.openings.map((opening) => {
+              const wall = layoutV2.walls.find(
+                (candidate) => candidate.id === opening.wallId,
+              );
+              if (!wall || !renderableLayoutFloorIds.has(wall.floorId)) return null;
+              const floor = layoutV2.floors.find(
+                (candidate) => candidate.id === wall.floorId,
+              );
+              return (
+                <LayoutOpeningMarker
+                  key={opening.id}
+                  wall={wall}
+                  opening={opening}
+                  elevationM={floor?.elevationM ?? 0}
+                />
+              );
+            })}
+
           {/* Zone boxes */}
-          {transforms.map((t, idx) => {
+          {!layoutV2 && transforms.map((t, idx) => {
             const zone = zones[idx]!;
             const color = getZoneColor(zone.type, styleTag);
             return (

@@ -6,9 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
 
 enum UserRole {
@@ -105,6 +103,7 @@ model Project {
   contingencyPct  Float         @default(0.10)
   taxEnabled      Boolean       @default(false)
   currency        String        @default("IDR")
+  data            Json?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   layout          HomeLayout?
@@ -222,4 +221,6 @@ model Payment {
   entitlement   Entitlement?    @relation(fields: [entitlementId], references: [id])
   entitlementId String?
   createdAt     DateTime        @default(now())
+
+  @@unique([provider, providerRef])
 }

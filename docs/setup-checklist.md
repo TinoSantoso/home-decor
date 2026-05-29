@@ -22,6 +22,14 @@ Tick each off as you go.
 - [ ] Auth → URL configuration → add `http://localhost:3000` and final domain to allowed redirects
 - [ ] Run: `npm run prisma:migrate -- --name init` to create tables
 
+## Billing Providers (fill after app flows are complete)
+
+- [ ] Stripe Dashboard → Developers → API keys → copy secret key to `STRIPE_SECRET_KEY`.
+- [ ] Stripe Dashboard → Product catalog → create the unlimited monthly price → copy price id to `STRIPE_UNLIMITED_PRICE_ID`.
+- [ ] Stripe Dashboard → Developers → Webhooks → create endpoint `/api/webhooks/stripe` → copy signing secret to `STRIPE_WEBHOOK_SECRET`.
+- [ ] Midtrans Dashboard → Settings → Access Keys → copy server key to `MIDTRANS_SERVER_KEY`.
+- [ ] Set `APP_ORIGIN` to the deployed app origin; locally use `http://localhost:3000`.
+
 ## Cloudflare R2 (Storage — free tier)
 
 - [ ] Create Cloudflare account (free plan)

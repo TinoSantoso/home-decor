@@ -1,6 +1,7 @@
 import type { Zone } from '../zones';
 import type { BudgetTier } from '../cost-engine';
 import type { StyleTag } from '../catalog';
+import type { LayoutV2 } from '../layout-v2/types';
 
 export interface PlacedItemRecord {
   id: string;
@@ -33,6 +34,8 @@ export interface ProjectRecord {
    * Optional for backwards-compat with pre-slice-5 records.
    */
   shareTokenExpiry?: number | null;
+  /** Advanced polygon/wall/floor layout model. Optional for old rectangular projects. */
+  layoutV2?: LayoutV2 | null;
   zones: Zone[];
   placedItems: PlacedItemRecord[];
   createdAt: number;

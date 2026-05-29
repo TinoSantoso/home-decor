@@ -5,6 +5,7 @@ import { listProjects, deleteProject } from '../lib/db/projects';
 import type { ProjectRecord } from '../lib/db/types';
 import { formatRelativeFromNow } from '../lib/relative-time';
 import { useAuthStore } from '../stores/auth';
+import { deleteOwnedProjectFn, listOwnedProjectsFn } from '../server/projects';
 
 export const Route = createFileRoute('/dashboard')({
   ssr: false,
@@ -16,30 +17,26 @@ function DashboardPage() {
   const navigate = useNavigate();
   const loading = useAuthStore((s) => s.loading);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const openAuthModal = useAuthStore((s) => s.openAuthModal);
   const [projects, setProjects] = useState<ProjectRecord[] | null>(null);
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      openAuthModal();
-      void navigate({ to: '/' });
-    }
-  }, [isAuthenticated, loading, navigate, openAuthModal]);
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    void listProjects().then(setProjects);
-  }, [isAuthenticated]);
+    if (loading) return;
+    void (isAuthenticated ? listOwnedProjectsFn() : listProjects()).then(setProjects);
+  }, [isAuthenticated, loading]);
 
   async function onDelete(id: string) {
-    await deleteProject(id);
-    const next = await listProjects();
+    if (isAuthenticated) {
+      await deleteOwnedProjectFn({ data: { id } });
+    } else {
+      await deleteProject(id);
+    }
+    const next = isAuthenticated ? await listOwnedProjectsFn() : await listProjects();
     setProjects(next);
   }
 
   const localeTag = i18n.language === 'id' ? 'id' : 'en';
 
-  if (loading || !isAuthenticated) return null;
+  if (loading) return null;
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">

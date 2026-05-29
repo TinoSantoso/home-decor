@@ -26,6 +26,7 @@ export default defineConfig({
       'tests-e2e/**',
       '.worktrees/**',
       '.claude/worktrees/**',
+      'worktrees/**',
     ],
   },
 });

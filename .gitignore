@@ -12,6 +12,7 @@ build/
 
 # Git worktrees (subagent-driven dev branches)
 .worktrees/
+worktrees/
 
 # Generated route tree (TanStack Router)
 src/routeTree.gen.ts
@@ -28,6 +29,9 @@ src/routeTree.gen.ts
 !.vscode/settings.json
 .idea/
 .claude/
+.agents/
+.superpowers/
+skills-lock.json
 
 # Logs
 npm-debug.log*

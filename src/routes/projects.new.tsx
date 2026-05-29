@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createProject } from '../lib/db/projects';
 import { useAuthStore } from '../stores/auth';
+import { createOwnedProjectFn } from '../server/projects';
 
 export const Route = createFileRoute('/projects/new')({
   ssr: false,
@@ -24,29 +25,24 @@ function NewProjectPage() {
   const [busy, setBusy] = useState(false);
   const loading = useAuthStore((s) => s.loading);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const openAuthModal = useAuthStore((s) => s.openAuthModal);
 
-  useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      openAuthModal();
-      void navigate({ to: '/' });
-    }
-  }, [isAuthenticated, loading, navigate, openAuthModal]);
-
-  if (loading || !isAuthenticated) return null;
+  if (loading) return null;
 
   async function pickTemplate(templateId: string) {
     if (busy) return;
     setBusy(true);
     try {
-      const project = await createProject({
+      const input = {
         name: t(`templates.${templateId}`),
         templateId,
         budgetTier: 'standar',
         contingencyPct: 0.1,
         taxEnabled: false,
         climateZone: 'tropical_indonesia',
-      });
+      } as const;
+      const project = isAuthenticated
+        ? await createOwnedProjectFn({ data: input })
+        : await createProject(input);
       await navigate({
         to: '/projects/$projectId/editor',
         params: { projectId: project.id },

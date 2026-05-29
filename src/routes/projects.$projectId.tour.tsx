@@ -3,6 +3,8 @@ import { Suspense, lazy, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFloorPlan } from '../stores/floor-plan';
 import { getProject } from '../lib/db/projects';
+import { useAuthStore } from '../stores/auth';
+import { getOwnedProjectFn } from '../server/projects';
 
 const TourScene = lazy(() => import('../components/tour/TourScene'));
 const BeforeAfterCompare = lazy(() =>
@@ -27,6 +29,8 @@ function TourPage() {
   const navigate = useNavigate();
   const [load, setLoad] = useState<LoadState>({ kind: 'loading' });
   const [compareMode, setCompareMode] = useState(false);
+  const loadingAuth = useAuthStore((s) => s.loading);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   const loadProject = useFloorPlan((s) => s.loadProject);
   const reset = useFloorPlan((s) => s.reset);
@@ -34,9 +38,12 @@ function TourPage() {
   const zones = useFloorPlan((s) => s.zones);
 
   useEffect(() => {
+    if (loadingAuth) return;
     let cancelled = false;
     void (async () => {
-      const record = await getProject(projectId);
+      const record = isAuthenticated
+        ? await getOwnedProjectFn({ data: { id: projectId } })
+        : await getProject(projectId);
       if (cancelled) return;
       if (!record) {
         setLoad({ kind: 'not_found' });
@@ -49,7 +56,7 @@ function TourPage() {
       cancelled = true;
       reset();
     };
-  }, [projectId, loadProject, reset]);
+  }, [isAuthenticated, loadingAuth, projectId, loadProject, reset]);
 
   if (load.kind === 'loading') {
     return (

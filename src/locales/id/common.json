@@ -73,6 +73,50 @@
     "uploading": "Mengunggah…",
     "uploadFailed": "Unggah gagal"
   },
+  "layoutV2": {
+    "modeClassic": "Zona klasik",
+    "modeAdvanced": "Layout lanjutan",
+    "floor": "Lantai",
+    "addFloor": "Tambah lantai",
+    "inspector": "Inspector layout",
+    "selectHint": "Pilih area atau dinding untuk mengedit layout.",
+    "floorMaterial": "Material lantai",
+    "terrainMaterial": "Material luar ruang",
+    "wallSelected": "Dinding terpilih",
+    "addDoor": "Tambah pintu",
+    "addWindow": "Tambah jendela",
+    "quickAdd": "Tambah cepat",
+    "addLivingArea": "Tambah area ruang tamu",
+    "addTerraceArea": "Tambah area teras",
+    "openings": "Bukaan",
+    "doorOffset": "Offset pintu",
+    "windowOffset": "Offset jendela",
+    "openingWidth": "Lebar bukaan",
+    "removeOpening": "Hapus bukaan",
+    "doorOffsetIndexed": "Offset pintu {{index}}",
+    "windowOffsetIndexed": "Offset jendela {{index}}",
+    "openingWidthIndexed": "Lebar bukaan {{index}}",
+    "removeOpeningIndexed": "Hapus bukaan {{index}}",
+    "openingType": {
+      "door": "pintu",
+      "window": "jendela"
+    },
+    "floorMaterials": {
+      "tile": "Keramik",
+      "wood": "Kayu",
+      "concrete": "Beton",
+      "stone": "Batu",
+      "outdoor": "Luar ruang"
+    },
+    "terrainMaterials": {
+      "grass": "Rumput",
+      "paving": "Paving",
+      "gravel": "Kerikil",
+      "decking": "Dek",
+      "soil": "Tanah"
+    },
+    "noOpenings": "Belum ada pintu atau jendela di dinding ini."
+  },
   "reason": {
     "style_match": "Gaya cocok",
     "climate_fit": "Tahan iklim",
@@ -230,9 +274,7 @@
     "signOut": "Keluar",
     "signedOut": "Berhasil keluar.",
     "guardTitle": "Masuk Diperlukan",
-    "guardBody": "Anda perlu masuk untuk mengakses halaman ini.",
-    "callbackProcessing": "Memproses autentikasi…",
-    "callbackFailed": "Autentikasi gagal"
+    "guardBody": "Anda perlu masuk untuk mengakses halaman ini."
   },
   "share": {
     "label": "Bagikan Proyek",
@@ -247,5 +289,31 @@
     "invalid": "Tautan Tidak Valid",
     "invalidHelp": "Tautan bagikan ini tidak valid. Mungkin telah dicabut.",
     "goHome": "Ke Beranda"
+  },
+  "paywall": {
+    "title": "Kuota Habis",
+    "body": "Kuota unduhan PDF Anda telah habis. Masuk atau daftar untuk mendapat {{credits}} kuota gratis, atau pilih paket untuk kuota tak terbatas.",
+    "creditsRemaining_one": "{{count}} kuota tersisa",
+    "creditsRemaining_other": "{{count}} kuota tersisa",
+    "ctaUpgrade": "Pilih Paket",
+    "ctaSignIn": "Masuk / Daftar",
+    "ctaClose": "Nanti Saja",
+    "checkoutStarting": "Memulai checkout…",
+    "checkoutError": "Checkout belum bisa dimulai. Periksa konfigurasi billing atau coba lagi nanti.",
+    "freeCreditsTitle": "Gratis! {{credits}} Kuota",
+    "freeCreditsBody": "Daftar sekarang dan dapatkan {{credits}} kuota unduhan PDF gratis.",
+    "upgradeTitle": "Kuota Tidak Terbatas",
+    "upgradeBody": "Dapatkan kuota tak terbatas untuk semua fitur premium.",
+    "features": {
+      "unlimitedExports": "Unlimited PDF exports",
+      "unlimitedProjects": "Unlimited projects",
+      "unlimitedShare": "Unlimited share links"
+    },
+    "payingUserTitle": "Batas Terpenuhi",
+    "payingUserBody": "Anda sudah menggunakan semua fitur premium yang tersedia di paket Anda."
+  },
+  "migration": {
+    "importing": "Menyalin proyek lokal ke akun cloud…",
+    "error": "Sebagian proyek lokal belum tersalin. Coba muat ulang setelah koneksi stabil."
   }
 }

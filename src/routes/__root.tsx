@@ -4,11 +4,13 @@ import {
   Scripts,
   createRootRoute,
 } from '@tanstack/react-router';
-import { Suspense, type ReactNode, useEffect } from 'react';
+import { Suspense, type ReactNode, useEffect, useState } from 'react';
 import { I18nextProvider, useTranslation } from 'react-i18next';
 import i18n from '../lib/i18n';
 import globalsCss from '../styles/globals.css?url';
 import { AuthModal } from '../components/auth/AuthModal';
+import { planLocalProjectImports } from '../lib/project-migration';
+import { importOwnedProjectFn, listOwnedProjectsFn } from '../server/projects';
 import {
   loadSessionFromCookies,
   onAuthStateChange,
@@ -51,6 +53,7 @@ function RootShell() {
   const closeAuthModal = useAuthStore((s) => s.closeAuthModal);
   const signOut = useAuthStore((s) => s.signOut);
   const { t } = useTranslation();
+  const [migrationStatus, setMigrationStatus] = useState<'idle' | 'importing' | 'done' | 'error'>('idle');
 
   // Hydrate auth state from cookies on mount.
   useEffect(() => {
@@ -65,6 +68,32 @@ function RootShell() {
       unsubscribe.data.subscription.unsubscribe();
     };
   }, [init]);
+
+  useEffect(() => {
+    if (loading || !isAuthenticated || migrationStatus !== 'idle') return;
+    void (async () => {
+      try {
+        const { listProjects } = await import('../lib/db/projects');
+        const [localProjects, cloudProjects] = await Promise.all([
+          listProjects(),
+          listOwnedProjectsFn(),
+        ]);
+        const projectsToImport = planLocalProjectImports({ localProjects, cloudProjects });
+        if (projectsToImport.length === 0) {
+          setMigrationStatus('done');
+          return;
+        }
+        setMigrationStatus('importing');
+        await Promise.all(
+          projectsToImport.map((project) => importOwnedProjectFn({ data: project })),
+        );
+        setMigrationStatus('done');
+      } catch (error) {
+        console.error('Local project import failed:', error);
+        setMigrationStatus('error');
+      }
+    })();
+  }, [isAuthenticated, loading, migrationStatus]);
 
   return (
     <>
@@ -98,6 +127,18 @@ function RootShell() {
               {t('auth.signOut')}
             </button>
           </div>
+        </div>
+      )}
+
+      {migrationStatus === 'importing' && (
+        <div className="border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-6 py-2 text-center text-sm text-[color:var(--color-text-muted)]">
+          {t('migration.importing')}
+        </div>
+      )}
+
+      {migrationStatus === 'error' && (
+        <div role="alert" className="border-b border-[color:var(--color-danger)] bg-[color:var(--color-surface)] px-6 py-2 text-center text-sm text-[color:var(--color-danger)]">
+          {t('migration.error')}
         </div>
       )}
 

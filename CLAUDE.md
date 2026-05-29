@@ -113,6 +113,27 @@ The runtime spine is one Zustand store fed by IndexedDB:
 - ESLint allows `console.warn` / `console.error` only; `console.log` is a
   warning. Don't leave debug logs in committed code.
 
+## Env vars (Phase 3 — fill in manually)
+
+Add to `.env.local` (never commit):
+
+```env
+# App origin used for Stripe success/cancel URLs; locally use http://localhost:3000
+APP_ORIGIN=http://localhost:3000
+
+# Stripe Dashboard → Developers → API keys
+STRIPE_SECRET_KEY=sk_...
+
+# Stripe Dashboard → Product catalog → unlimited monthly price id
+STRIPE_UNLIMITED_PRICE_ID=price_...
+
+# Stripe Dashboard → Developers → Webhooks → /api/webhooks/stripe
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Midtrans Dashboard → Settings → Access Keys
+MIDTRANS_SERVER_KEY=...
+```
+
 ## File layout shortcuts
 
 - Pure libs: `src/lib/` (isomorphic, tested in node env)

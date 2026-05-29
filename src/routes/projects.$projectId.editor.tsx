@@ -3,10 +3,16 @@ import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EditorToolbar } from '../components/editor/EditorToolbar';
 import { FloorPlanUploader } from '../components/editor/FloorPlanUploader';
+import { FloorSelector } from '../components/editor/FloorSelector';
+import { LayoutCanvas } from '../components/editor/LayoutCanvas';
+import { LayoutInspectorPanel } from '../components/editor/LayoutInspectorPanel';
+import { LayoutModeToggle } from '../components/editor/LayoutModeToggle';
 import { ZoneDetailPanel } from '../components/editor/ZoneDetailPanel';
 import { useFloorPlan } from '../stores/floor-plan';
 import { getProject, saveProject } from '../lib/db/projects';
 import { debounce } from '../lib/debounce';
+import { useAuthStore } from '../stores/auth';
+import { getOwnedProjectFn, saveOwnedProjectFn } from '../server/projects';
 
 const FloorPlanCanvas = lazy(
   () => import('../components/editor/FloorPlanCanvas'),
@@ -28,16 +34,22 @@ function EditorPage() {
   const navigate = useNavigate();
   const [load, setLoad] = useState<LoadState>({ kind: 'loading' });
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const loadingAuth = useAuthStore((s) => s.loading);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   const loadProject = useFloorPlan((s) => s.loadProject);
   const reset = useFloorPlan((s) => s.reset);
   const projectName = useFloorPlan((s) => s.projectName);
   const setProjectName = useFloorPlan((s) => s.setProjectName);
+  const layoutMode = useFloorPlan((s) => s.layoutMode);
 
   useEffect(() => {
+    if (loadingAuth) return;
     let cancelled = false;
     void (async () => {
-      const record = await getProject(projectId);
+      const record = isAuthenticated
+        ? await getOwnedProjectFn({ data: { id: projectId } })
+        : await getProject(projectId);
       if (cancelled) return;
       if (!record) {
         setLoad({ kind: 'not_found' });
@@ -50,7 +62,7 @@ function EditorPage() {
       cancelled = true;
       reset();
     };
-  }, [projectId, loadProject, reset]);
+  }, [isAuthenticated, loadingAuth, projectId, loadProject, reset]);
 
   const persistRef = useRef<ReturnType<typeof debounce<[]>> | null>(null);
   useEffect(() => {
@@ -59,7 +71,10 @@ function EditorPage() {
       const record = useFloorPlan.getState().toProjectRecord();
       if (!record) return;
       setSaveStatus('saving');
-      void saveProject(record).then(() => setSaveStatus('saved'));
+      const save = isAuthenticated
+        ? saveOwnedProjectFn({ data: record })
+        : saveProject(record);
+      void save.then(() => setSaveStatus('saved'));
     }, 400);
     persistRef.current = persist;
 
@@ -72,6 +87,7 @@ function EditorPage() {
         'taxEnabled',
         'placedItems',
         'floorPlanImageUrl',
+        'layoutV2',
       ];
       if (watched.some((k) => state[k] !== prev[k])) persist();
     });
@@ -81,7 +97,7 @@ function EditorPage() {
       persist.flush();
       persistRef.current = null;
     };
-  }, [load.kind]);
+  }, [isAuthenticated, load.kind]);
 
   if (load.kind === 'loading') {
     return (
@@ -151,21 +167,35 @@ function EditorPage() {
 
       <EditorToolbar />
 
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <LayoutModeToggle />
+        {layoutMode === 'advanced' && <FloorSelector />}
+      </div>
+
       <FloorPlanUploader />
 
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[1fr_360px]">
-        <Suspense
-          fallback={
-            <div className="grid h-[700px] place-items-center rounded-[var(--radius)] border border-[color:var(--color-border)]">
-              <span className="text-sm text-[color:var(--color-text-muted)]">
-                {t('editor.loadingCanvas')}
-              </span>
-            </div>
-          }
-        >
-          <FloorPlanCanvas />
-        </Suspense>
-        <ZoneDetailPanel />
+        {layoutMode === 'advanced' ? (
+          <>
+            <LayoutCanvas />
+            <LayoutInspectorPanel />
+          </>
+        ) : (
+          <>
+            <Suspense
+              fallback={
+                <div className="grid h-[700px] place-items-center rounded-[var(--radius)] border border-[color:var(--color-border)]">
+                  <span className="text-sm text-[color:var(--color-text-muted)]">
+                    {t('editor.loadingCanvas')}
+                  </span>
+                </div>
+              }
+            >
+              <FloorPlanCanvas />
+            </Suspense>
+            <ZoneDetailPanel />
+          </>
+        )}
       </div>
     </main>
   );
